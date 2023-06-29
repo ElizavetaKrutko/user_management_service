@@ -1,9 +1,10 @@
 FROM python:3.10 as python-base
-RUN mkdir python_tutorial
-WORKDIR  /python_tutorial
-COPY /pyproject.toml /python_tutorial
+RUN mkdir user_management_service
+WORKDIR  /user_management_service
+COPY poetry.lock pyproject.toml ./
 RUN pip3 install poetry
 RUN poetry config virtualenvs.create false
-RUN poetry install
+RUN poetry install --no-root
 COPY . .
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
