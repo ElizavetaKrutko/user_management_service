@@ -21,3 +21,11 @@
 .idea/**/dbnavigator.xml
 
 .DS_Store
+
+envs/.env
+
+app/db/__pycache__/
+app/__pycache__/
+
+.idea/modules.xml
+.idea/user_management_service.iml
