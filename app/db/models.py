@@ -1,20 +1,23 @@
 import datetime
+import enum
 import uuid
-from typing import List, Literal, Optional
+from typing import List, Optional
 
 from sqlalchemy import ForeignKey, Integer, String, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+Base = declarative_base()
 
 
-class Base(DeclarativeBase):
-    pass
-
-
-Role = Literal["USER", "ADMIN", "MODERATOR"]
+class Role(enum.Enum):
+    USER = "user"
+    ADMIN = "admin"
+    MODERATOR = "moderator"
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "user_table"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
@@ -28,13 +31,13 @@ class User(Base):
     is_blocked: Mapped[bool]
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
     modified_at: Mapped[datetime.datetime]
-    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
+    group_id: Mapped[int] = mapped_column(ForeignKey("group_table.id"))
 
     groups: Mapped["Group"] = relationship(back_populates="users")
 
 
 class Group(Base):
-    __tablename__ = "group"
+    __tablename__ = "group_table"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50))
