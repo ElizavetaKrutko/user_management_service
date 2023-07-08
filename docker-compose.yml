@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
+      - ./app:/user_management_service/app
     env_file:
       - envs/.env
     depends_on:
