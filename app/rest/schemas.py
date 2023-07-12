@@ -1,6 +1,10 @@
+from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
+
+from app.db.models import Role
 
 
 class TokensResponseSchema(BaseModel):
@@ -11,12 +15,12 @@ class TokensResponseSchema(BaseModel):
 class TokenPayload(BaseModel):
     sub: Optional[str] = None
     exp: int
+    jwt_uuid: str
 
 
-class UserRead(BaseModel):
-    id: int
-    username: str
-    role: str
+class UserBaseRead(BaseModel):
+    id: UUID
+    role: Role
     group_id: int
 
     class Config:
@@ -28,12 +32,20 @@ class UserCreate(BaseModel):
     surname: Optional[str]
     username: str
     password: str
-    phone_number: Optional[str]
-    email: Optional[str]
-    role: Optional[str] = "user"
+    phone_number: str
+    email: str
+    role: Optional[Role] = Role.USER
     image_path: Optional[str]
-    is_blocked: Optional[str] = "False"
+    is_blocked: Optional[bool] = False
     group_id: int
+
+
+class UserLogin(BaseModel):
+    login: str
+    password: str
+
+    class Config:
+        orm_mode = True
 
 
 class UserUpdate(BaseModel):
