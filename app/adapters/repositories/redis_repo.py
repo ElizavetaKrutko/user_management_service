@@ -2,8 +2,10 @@ import logging
 
 import aioredis
 
+from app.ports.redis_port import NoSqlDBRepositoryPort
 
-class RedisRepository:
+
+class RedisRepository(NoSqlDBRepositoryPort):
     def __init__(self) -> None:
         self.redis = aioredis.from_url(
             "redis://redis:6379", encoding="utf-8", decode_responses=True
@@ -14,6 +16,9 @@ class RedisRepository:
         logging.error("we are on activate_jwt")
         logging.error("jwt_uuid: ")
         logging.error(jwt_uuid)
+
+        logging.error("user_id: ")
+        logging.error(user_id)
 
         user_active_jwt_key = str(user_id) + ":active_jwt"
         user_blacklist_key = str(user_id) + ":blacklist"
@@ -29,7 +34,7 @@ class RedisRepository:
             logging.error("count tokens in blacklist: ")
             logging.error(token_to_blacklist)
 
-        new_active_token = await self.redis.set(user_active_jwt_key, jwt_uuid)
+        new_active_token = await self.redis.set(user_active_jwt_key, str(jwt_uuid))
         logging.error("new_active_token: ")
         logging.error(new_active_token)
 
@@ -57,7 +62,7 @@ class RedisRepository:
 
         result: bool = False
 
-        if jwt_uuid in user_blacklist_all:
+        if str(jwt_uuid) in user_blacklist_all:
             result = True
 
         await self.redis.close()

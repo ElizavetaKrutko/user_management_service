@@ -24,7 +24,7 @@
 
 envs/.env
 
-app/db/__pycache__/
+app/adapters/__pycache__/
 app/__pycache__/
 
 .idea/modules.xml
@@ -36,7 +36,6 @@ __pycache__/*
 __pycache__/
 *.py[cod]
 *$py.class
-services/
 
 # C extensions
 *.so

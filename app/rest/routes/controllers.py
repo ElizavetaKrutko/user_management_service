@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
 
-from app.db.models import Role
+from app.adapters.orm_engines.models import Role
+from app.domain.user import User
 
 
 class TokensResponseSchema(BaseModel):
@@ -13,9 +13,9 @@ class TokensResponseSchema(BaseModel):
 
 
 class TokenPayload(BaseModel):
-    sub: Optional[str] = None
+    sub: Optional[UUID] = None
     exp: int
-    jwt_uuid: str
+    jwt_uuid: UUID
 
 
 class UserBaseRead(BaseModel):
@@ -39,10 +39,30 @@ class UserCreate(BaseModel):
     is_blocked: Optional[bool] = False
     group_id: int
 
+    def to_entity(self):
+        return User(
+            name=self.name,
+            surname=self.surname,
+            username=self.username,
+            password=self.password,
+            phone_number=self.phone_number,
+            email=self.email,
+            role=self.role,
+            image_path=self.image_path,
+            is_blocked=self.is_blocked,
+            group_id=self.group_id,
+        )
+
 
 class UserLogin(BaseModel):
     login: str
     password: str
+
+    def to_entity(self):
+        return User(
+            login=self.login,
+            password=self.password,
+        )
 
     class Config:
         orm_mode = True

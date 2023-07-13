@@ -1,71 +1,61 @@
-import logging
+from fastapi import APIRouter, Depends, status
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
-
-from app.db.dependencies.repository import setup_repository
-from app.db.repositories.postgres_repo import PostgresRepository
-from app.db.repositories.redis_repo import RedisRepository
-from app.rest import schemas
-from app.services import auth_service
+from app.dependencies.security import (get_user_from_access_token,
+                                       get_user_from_refresh_token)
+from app.dependencies.usecase_dependencies import get_auth_management_use_case
+from app.rest.routes import controllers
+from app.usecases.auth import AuthManagementUseCase
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
 
 @router.post(
     "/signup",
-    response_model=schemas.TokensResponseSchema,
+    response_model=controllers.TokensResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def signup(
-    new_user_data: schemas.UserCreate,
-    db_repo: PostgresRepository = Depends(setup_repository(PostgresRepository)),
-    redis_repo: RedisRepository = Depends(RedisRepository),
+    new_user_data: controllers.UserCreate,
+    auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
 ):
     # Creates a user in DB. Add token in a "whitelist" in Redis
-    user_data = await auth_service.create_user(db_repo, new_user_data)
-    return await auth_service.create_jwt_token(redis_repo, user_data.id)
+    return await auth_use_case.create_user(new_user_data.to_entity())
 
 
-@router.post("/login", response_model=schemas.TokensResponseSchema)
+@router.post("/login", response_model=controllers.TokensResponseSchema)
 async def login(
-    user_credentials: schemas.UserLogin,
-    db_repo: PostgresRepository = Depends(setup_repository(PostgresRepository)),
-    redis_repo: RedisRepository = Depends(RedisRepository),
+    user_credentials: controllers.UserLogin,
+    auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
 ):
     # Accepts the user’s login (username, email or phone number) and password, returns access and refresh tokens
-    user_data = await auth_service.login_user(db_repo, user_credentials)
-    return await auth_service.create_jwt_token(redis_repo, user_data.id)
+    return await auth_use_case.login_user(user_credentials.to_entity())
 
 
 @router.post("/logout")
 async def logout(
-    db_repo: PostgresRepository = Depends(setup_repository(PostgresRepository)),
-    redis_repo: RedisRepository = Depends(RedisRepository),
-    user_data: schemas.UserBaseRead = Depends(auth_service.get_user_from_jwt),
+    auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
+    user_data: controllers.UserBaseRead = Depends(get_user_from_access_token),
 ):
-    # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
-    # Logouts the user from the system
-    # Old refresh token should be blacklisted using Redis
-    logging.error(user_data.dict())
-    await auth_service.logout_user(redis_repo, user_data.id)
-    return "The user logged out"
+    return await auth_use_case.logout_user(user_data.id)
 
 
-@router.post("/refresh-token", response_model=schemas.TokensResponseSchema)
+@router.post("/refresh-token", response_model=controllers.TokensResponseSchema)
 async def refresh_token(
-    db_repo=Depends(setup_repository(PostgresRepository)),
-    redis_repo: RedisRepository = Depends(RedisRepository),
-    user_data: schemas.UserBaseRead = Depends(auth_service.get_user_from_jwt),
+    auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
+    user_data: controllers.UserBaseRead = Depends(get_user_from_refresh_token),
 ):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Accepts refresh token and returns new access and refresh tokens.
-    # Old refresh token should be blacklisted using Redis and check is tokens from responce in blacklist
+    # Old refresh token should be blacklisted using Redis and check is tokens from response in blacklist
 
-    return await auth_service.create_jwt_token(redis_repo, user_data.id)
+    return await auth_use_case.create_jwt_token(user_data.id)
 
 
 @router.post("/reset-password")
-async def reset_password(db_repo=Depends(setup_repository(PostgresRepository))):
+async def reset_password(
+    auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
+    user_data: controllers.UserBaseRead = Depends(get_user_from_access_token),
+):
     # NO AUTHORIZATION
     # Accepts the user's email address and sends an email with a link to reset the password.
     # Another optional endpoint can be added to implement this logic - ?

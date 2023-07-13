@@ -1,20 +1,17 @@
 from fastapi import APIRouter, Depends
 
-from app.db.dependencies.repository import setup_repository
-from app.db.repositories.postgres_repo import PostgresRepository
-
 router = APIRouter(prefix="/api/v1", tags=["user", "users"])
 
 
 @router.get("/user/me")
-async def get_me(repo=Depends(setup_repository(PostgresRepository))):
+async def get_me():
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should GET the user by user_id from JWT (returns user info)
     return "Not implemented"
 
 
 @router.patch("/user/me")
-async def patch_me(repo=Depends(setup_repository(PostgresRepository))):
+async def patch_me():
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should PATCH the user info by user_id from JWT
     # Accepts new values for the fields to update and returns the updated user info
@@ -22,7 +19,7 @@ async def patch_me(repo=Depends(setup_repository(PostgresRepository))):
 
 
 @router.delete("/user/me")
-async def delete_me(repo=Depends(setup_repository(PostgresRepository))):
+async def delete_me():
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should DELETE the user (Deletes the user by id probably)
     return "Not implemented"
@@ -30,7 +27,6 @@ async def delete_me(repo=Depends(setup_repository(PostgresRepository))):
 
 @router.get("/users")
 async def get_users(
-    repo=Depends(setup_repository(PostgresRepository)),
     page: int = 1,
     limit: int = 30,
     filter_by_name: str = "",
@@ -47,7 +43,7 @@ async def get_users(
 
 
 @router.get("/user/{user_id}")
-async def get_user_by_id(repo=Depends(setup_repository(PostgresRepository))):
+async def get_user_by_id():
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     #                   Should check if the requester is (ADMIN) OR (MODERATOR of the group that the requested user belongs to)
     # Should GET the user
@@ -56,7 +52,7 @@ async def get_user_by_id(repo=Depends(setup_repository(PostgresRepository))):
 
 
 @router.patch("/user/{user_id}")
-async def update_user_by_id(repo=Depends(setup_repository(PostgresRepository))):
+async def update_user_by_id():
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     #                   Should check if the requester is ADMIN
     # Should PATCH the user data

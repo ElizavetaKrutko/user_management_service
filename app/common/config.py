@@ -1,12 +1,12 @@
 import logging
 from os.path import dirname, expanduser, join
 
-from dotenv import find_dotenv
+from dotenv import find_dotenv, load_dotenv
 from pydantic import BaseSettings
 
 # dotenv_path = join(dirname(__file__), "../../envs/.env")
 # logging.error(dotenv_path)
-# load_dotenv(dotenv_path="root:/user_management_service/app/envs/.env")
+load_dotenv(dotenv_path="root:/user_management_service/app/envs/.env")
 
 
 class Settings(BaseSettings):

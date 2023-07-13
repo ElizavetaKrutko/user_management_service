@@ -6,7 +6,7 @@ from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine, async_engine_from_config
 
-from app.db import models
+from app.adapters.orm_engines import models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

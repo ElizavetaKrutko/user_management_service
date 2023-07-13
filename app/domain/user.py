@@ -15,16 +15,18 @@ class Role(Enum):
 
 @dataclass
 class User:
-    id: UUID
-    name: Optional[str]
-    surname: Optional[str]
-    username: str
-    hashed_password: str
-    phone_number: str
-    email: str
-    image_path: Optional[str]
-    created_at: datetime
-    modified_at: datetime
+    password: Optional[str]
     role: Role = Role.USER
+    name: Optional[str] = None
+    surname: Optional[str] = None
+    username: str = None
+    phone_number: str = None
+    email: str = None
+    image_path: Optional[str] = None
+    group_id: Group = None
     is_blocked: bool = False
-    group: Group = None
+    id: UUID = None
+    login: Optional[str] = None
+    hashed_password: Optional[str] = None
+    created_at: Optional[datetime] = None
+    modified_at: Optional[datetime] = None
