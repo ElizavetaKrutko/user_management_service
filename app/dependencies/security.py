@@ -9,16 +9,12 @@ from pydantic import ValidationError
 from app.adapters.repositories.redis_repo import RedisRepository
 from app.adapters.repositories.user.postgres_repo import \
     SQLAlchemyUserRepository
+from app.common.config import settings
 from app.dependencies.database import get_db
 from app.rest.routes import controllers
 
-ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
-
-# TODO: Replace with .env variable -> solve the issue with pydantic baseSettings class
-JWT_SECRET_KEY = "fewrfnedsfc"
-JWT_REFRESH_SECRET_KEY = "flfjdhs"
 
 reusable_oauth = OAuth2PasswordBearer(tokenUrl="/login", scheme_name="JWT")
 
@@ -27,7 +23,10 @@ async def get_user_from_access_token(
     db=Depends(get_db), token: str = Depends(reusable_oauth)
 ):
     return await get_user_from_jwt(
-        SQLAlchemyUserRepository(db), RedisRepository(), JWT_SECRET_KEY, token
+        SQLAlchemyUserRepository(db),
+        RedisRepository(),
+        settings.jwt_access_secret_key,
+        token,
     )
 
 
@@ -35,7 +34,10 @@ async def get_user_from_refresh_token(
     db=Depends(get_db), token: str = Depends(reusable_oauth)
 ):
     return await get_user_from_jwt(
-        SQLAlchemyUserRepository(db), RedisRepository(), JWT_REFRESH_SECRET_KEY, token
+        SQLAlchemyUserRepository(db),
+        RedisRepository(),
+        settings.jwt_refresh_secret_key,
+        token,
     )
 
 
@@ -48,7 +50,10 @@ async def get_user_from_jwt(
     try:
         logging.error(token, secret_key)
         payload = jwt.decode(
-            token, secret_key, algorithms=[ALGORITHM], options={"verify_exp": False}
+            token,
+            secret_key,
+            algorithms=[settings.algorithm],
+            options={"verify_exp": False},
         )
         token_data = controllers.TokenPayload(**payload)
 

@@ -1,3 +1,4 @@
+from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -7,7 +8,8 @@ class SQLAlchemy:
         self.session_maker = session_maker
 
     @classmethod
-    def start(cls, database_url):
+    def start(cls, db_credentials: dict):
+        database_url = URL.create(**db_credentials)
         engine = create_async_engine(database_url, echo=False)
         async_session = sessionmaker(
             engine,

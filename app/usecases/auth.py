@@ -1,3 +1,4 @@
+import logging
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Union
@@ -7,18 +8,14 @@ from jose import jwt
 from sqlalchemy import exc
 
 from app.common import utils
+from app.common.config import settings
 from app.domain.user import User
 from app.ports.redis_port import NoSqlDBRepositoryPort
 from app.ports.user_port import UserRepositoryPort
 from app.rest.routes import controllers
 
-ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
-
-# TODO: Replace with .env variable -> solve the issue with pydantic baseSettings class
-JWT_SECRET_KEY = "fewrfnedsfc"
-JWT_REFRESH_SECRET_KEY = "flfjdhs"
 
 
 class AuthManagementUseCase:
@@ -46,7 +43,12 @@ class AuthManagementUseCase:
             "sub": str(subject),
             "jwt_uuid": str(jwt_uuid),
         }
-        encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, ALGORITHM)
+        logging.error(settings.jwt_access_secret_key)
+        logging.error(settings.algorithm)
+        encoded_jwt = jwt.encode(
+            to_encode, settings.jwt_access_secret_key, settings.algorithm
+        )
+
         return encoded_jwt
 
     def create_refresh_token(
@@ -61,7 +63,9 @@ class AuthManagementUseCase:
             "sub": str(subject),
             "jwt_uuid": str(jwt_uuid),
         }
-        encoded_jwt = jwt.encode(to_encode, JWT_REFRESH_SECRET_KEY, ALGORITHM)
+        encoded_jwt = jwt.encode(
+            to_encode, settings.jwt_refresh_secret_key, settings.algorithm
+        )
         return encoded_jwt
 
     async def create_user(self, new_user_data: User):
@@ -81,7 +85,6 @@ class AuthManagementUseCase:
                     status_code=status.HTTP_400_BAD_REQUEST, detail=error_message
                 )
             else:
-                # create user in adapters
                 created_user = await self.db_repo.create_user(new_user_data)
 
                 return await self.create_jwt_token(created_user.id)

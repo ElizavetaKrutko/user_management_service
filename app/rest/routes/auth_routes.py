@@ -44,9 +44,8 @@ async def refresh_token(
     auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
     user_data: controllers.UserBaseRead = Depends(get_user_from_refresh_token),
 ):
-    # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Accepts refresh token and returns new access and refresh tokens.
-    # Old refresh token should be blacklisted using Redis and check is tokens from response in blacklist
+    # Old refresh token is blacklisted using Redis and check is tokens from response in blacklist
 
     return await auth_use_case.create_jwt_token(user_data.id)
 
