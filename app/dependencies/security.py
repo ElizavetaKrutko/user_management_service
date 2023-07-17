@@ -11,7 +11,7 @@ from app.adapters.repositories.user.postgres_repo import \
     SQLAlchemyUserRepository
 from app.common.config import settings
 from app.dependencies.database import get_db
-from app.rest.routes import controllers
+from app.rest.routes import schemas
 
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
@@ -46,16 +46,16 @@ async def get_user_from_jwt(
     no_sql_db_repo: RedisRepository,
     secret_key: str,
     token: str,
-) -> controllers.UserBaseRead:
+) -> schemas.UserBaseRead:
     try:
-        logging.error(token, secret_key)
+        logging.debug(token, secret_key)
         payload = jwt.decode(
             token,
             secret_key,
             algorithms=[settings.algorithm],
             options={"verify_exp": False},
         )
-        token_data = controllers.TokenPayload(**payload)
+        token_data = schemas.TokenPayload(**payload)
 
         if datetime.fromtimestamp(token_data.exp) < datetime.now():
             raise HTTPException(
@@ -88,4 +88,4 @@ async def get_user_from_jwt(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    return controllers.UserBaseRead.from_orm(db_user)
+    return schemas.UserBaseRead.from_orm(db_user)

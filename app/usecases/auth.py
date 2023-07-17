@@ -12,7 +12,7 @@ from app.common.config import settings
 from app.domain.user import User
 from app.ports.redis_port import NoSqlDBRepositoryPort
 from app.ports.user_port import UserRepositoryPort
-from app.rest.routes import controllers
+from app.rest.routes import schemas
 
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
@@ -43,8 +43,8 @@ class AuthManagementUseCase:
             "sub": str(subject),
             "jwt_uuid": str(jwt_uuid),
         }
-        logging.error(settings.jwt_access_secret_key)
-        logging.error(settings.algorithm)
+        logging.debug(settings.jwt_access_secret_key)
+        logging.debug(settings.algorithm)
         encoded_jwt = jwt.encode(
             to_encode, settings.jwt_access_secret_key, settings.algorithm
         )
@@ -92,7 +92,7 @@ class AuthManagementUseCase:
             err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
             raise HTTPException(status_code=400, detail=err_msg)
 
-    async def login_user(self, new_user_data: controllers.UserLogin):
+    async def login_user(self, new_user_data: schemas.UserLogin):
         current_user = await self.db_repo.get_user_by_login(new_user_data.login)
         if current_user is None:
             raise HTTPException(

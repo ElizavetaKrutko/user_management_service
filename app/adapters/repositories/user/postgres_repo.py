@@ -54,7 +54,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
     async def get_user_by_id(self, user_id):
         db_user = select(UserORM).where(UserORM.id == user_id)
         res = await self.db.execute(db_user)
-        logging.error(res)
+        logging.debug(res)
         return res.scalars().first()
 
     async def get_user_by_login(self, username, email=None, phone_number=None):
