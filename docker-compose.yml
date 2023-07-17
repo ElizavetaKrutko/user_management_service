@@ -6,9 +6,9 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
-    env_file:
-      - envs/.env
+      - ./app:/user_management_service/app
+    environment:
+      - API_ENVIRONMENT=local
     depends_on:
       - postgres
       - redis
@@ -17,7 +17,9 @@ services:
     image: postgres:14
     restart: always
     environment:
-      POSTGRES_PASSWORD: root
+      DB_USER: postgres
+      DB_PASSWORD: root
+      POSTGRES_DB: postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -27,13 +29,10 @@ services:
 
   redis:
     image: redis:latest
-    restart: always
     ports:
       - 6379:6379
     volumes:
       - redis-data:/data
-    env_file:
-      - envs/.env
 
 volumes:
     postgres-data:

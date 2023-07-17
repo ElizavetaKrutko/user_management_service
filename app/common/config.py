@@ -1,16 +1,19 @@
-from os.path import dirname, join
+from functools import lru_cache
 
-from dotenv import load_dotenv
-from pydantic import BaseSettings
+from app.common import app_settings
 
-dotenv_path = join(dirname(__file__), "envs/.env")
-load_dotenv(dotenv_path=dotenv_path)
-
-
-class Settings(BaseSettings):
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+environments = {
+    app_settings.EnvironmentTypes.dev: app_settings.DevelopmentSettings,
+    app_settings.EnvironmentTypes.test: app_settings.TestSettings,
+    app_settings.EnvironmentTypes.prod: app_settings.ProductionSettings,
+    app_settings.EnvironmentTypes.local: app_settings.LocalSettings,
+}
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> app_settings.BaseAppSettings:
+    app_env = app_settings.BaseAppSettings().environment
+    return environments[app_env]()
+
+
+settings = get_settings()
