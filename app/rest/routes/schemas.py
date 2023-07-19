@@ -27,6 +27,29 @@ class UserBaseRead(BaseModel):
         orm_mode = True
 
 
+class UserInfo(UserBaseRead):
+    name: Optional[str]
+    surname: Optional[str]
+    username: str
+    phone_number: str
+    email: str
+    image_path: Optional[str]
+    is_blocked: Optional[bool] = False
+
+
+class UserPublicInfo(BaseModel):
+    name: Optional[str]
+    surname: Optional[str]
+    username: str
+    phone_number: str
+    email: str
+    role: Optional[Role] = Role.USER
+    image_path: Optional[str]
+
+    class Config:
+        orm_mode = True
+
+
 class UserCreate(BaseModel):
     name: Optional[str]
     surname: Optional[str]
@@ -72,9 +95,20 @@ class UserUpdate(BaseModel):
     name: Optional[str]
     surname: Optional[str]
     username: Optional[str]
-    password: Optional[str]
     phone_number: Optional[str]
     email: Optional[str]
-    role: Optional[str]
+    role: Optional[Role]
     image_path: Optional[str]
-    is_blocked: Optional[str]
+    is_blocked: Optional[bool]
+
+    def to_entity(self):
+        return User(
+            name=self.name,
+            surname=self.surname,
+            username=self.username,
+            phone_number=self.phone_number,
+            email=self.email,
+            role=self.role,
+            image_path=self.image_path,
+            is_blocked=self.is_blocked,
+        )

@@ -17,3 +17,4 @@ def get_settings() -> app_settings.BaseAppSettings:
 
 
 settings = get_settings()
+logger = settings.get_logger()

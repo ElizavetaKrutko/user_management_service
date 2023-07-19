@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -15,7 +15,7 @@ class Role(Enum):
 
 @dataclass
 class User:
-    password: Optional[str]
+    password: Optional[str] = None
     role: Role = Role.USER
     name: Optional[str] = None
     surname: Optional[str] = None
@@ -30,3 +30,6 @@ class User:
     hashed_password: Optional[str] = None
     created_at: Optional[datetime] = None
     modified_at: Optional[datetime] = None
+
+    def dict(self):
+        return {k: str(v) for k, v in asdict(self).items() if v is not None}

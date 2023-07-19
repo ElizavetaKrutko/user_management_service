@@ -17,3 +17,11 @@ class UserRepositoryPort(ABC):
     @abstractmethod
     async def get_user_by_login(self, username, email=None, phone_number=None):
         pass
+
+    @abstractmethod
+    def update_user_by_id(self, new_user_data: User, user_id: UUID):
+        pass
+
+    @abstractmethod
+    def delete_user(self, user_id: UUID):
+        pass

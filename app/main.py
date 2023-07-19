@@ -3,12 +3,16 @@ from fastapi import Depends, FastAPI
 
 from app.dependencies.database import get_db
 from app.rest.routes import app_routes, auth_routes, user_routes
+from app.common.config import get_settings
 
 app = FastAPI(dependencies=[Depends(get_db)])
 
 app.include_router(app_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
+
+settings = get_settings()
+settings.configure_logging()
 
 
 if __name__ == "__main__":

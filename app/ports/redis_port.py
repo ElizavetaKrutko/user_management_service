@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from app.domain.group import Group
-from app.domain.user import User
-
 
 class NoSqlDBRepositoryPort(ABC):
     @abstractmethod
@@ -16,4 +13,8 @@ class NoSqlDBRepositoryPort(ABC):
 
     @abstractmethod
     async def blacklist_jwt(self, user_id: UUID):
+        pass
+
+    @abstractmethod
+    def delete_users_tokens(self, user_id: UUID):
         pass

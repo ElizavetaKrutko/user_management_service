@@ -1,4 +1,4 @@
-import logging
+from app.common.config import logger
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Union
@@ -43,8 +43,8 @@ class AuthManagementUseCase:
             "sub": str(subject),
             "jwt_uuid": str(jwt_uuid),
         }
-        logging.debug(settings.jwt_access_secret_key)
-        logging.debug(settings.algorithm)
+        logger.debug(settings.jwt_access_secret_key)
+        logger.debug(settings.algorithm)
         encoded_jwt = jwt.encode(
             to_encode, settings.jwt_access_secret_key, settings.algorithm
         )
