@@ -16,24 +16,29 @@ async def get_me(user_data: schemas.UserInfo = Depends(get_user_from_access_toke
 
 
 @router.patch("/user/me", response_model=schemas.UserPublicInfo)
-async def patch_me(modified_user_data: schemas.UserUpdate,
-                   user_use_case: UserUseCase = Depends(get_user_management_use_case),
-                   user_data: schemas.UserInfo = Depends(get_user_from_access_token),
-                   ):
+async def patch_me(
+    modified_user_data: schemas.UserUpdate,
+    user_use_case: UserUseCase = Depends(get_user_management_use_case),
+    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+):
     return await user_use_case.patch_user(modified_user_data.to_entity(), user_data.id)
 
 
 @router.delete("/user/me")
-async def delete_me(user_use_case: UserUseCase = Depends(get_user_management_use_case),
-                    user_data: schemas.UserInfo = Depends(get_user_from_access_token)):
+async def delete_me(
+    user_use_case: UserUseCase = Depends(get_user_management_use_case),
+    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+):
     deleted_user_id = await user_use_case.delete_user(user_data.id)
-    return f'User with id= {deleted_user_id} was successfully deleted'
+    return f"User with id= {deleted_user_id} was successfully deleted"
 
 
 @router.get("/user/{user_id}")
-async def get_another_user_by_id(user_id: UUID,
-                                 user_use_case: UserUseCase = Depends(get_user_management_use_case),
-                                 user_data: schemas.UserInfo = Depends(get_user_from_access_token)):
+async def get_another_user_by_id(
+    user_id: UUID,
+    user_use_case: UserUseCase = Depends(get_user_management_use_case),
+    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should check if the requester is (ADMIN) OR (MODERATOR of the group that the requested user belongs to)
     # Should GET the user
@@ -42,21 +47,28 @@ async def get_another_user_by_id(user_id: UUID,
 
 
 @router.patch("/user/{user_id}")
-async def update_user_by_id():
+async def edit_another_user_by_id(
+    modified_user_data: schemas.UserUpdate,
+    user_id: UUID,
+    user_use_case: UserUseCase = Depends(get_user_management_use_case),
+    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should check if the requester is ADMIN
     # Should PATCH the user data
     # Accepts new values for the fields to update and returns the updated user info
-    return "Not implemented"
+    return await user_use_case.edit_another_user_by_id(
+        modified_user_data.to_entity(), user_id, user_data
+    )
 
 
 @router.get("/users")
 async def get_users(
-        page: int = 1,
-        limit: int = 30,
-        filter_by_name: str = "",
-        sort_by: str = "id",
-        order_by: str = "asc",
+    page: int = 1,
+    limit: int = 30,
+    filter_by_name: str = "",
+    sort_by: str = "id",
+    order_by: str = "asc",
 ):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     #                   Should check if the requester is (ADMIN) OR (MODERATOR of the group that the user belongs to)

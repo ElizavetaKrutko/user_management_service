@@ -1,9 +1,10 @@
 import logging
 from enum import Enum
 from typing import Any
-from app.common.custom_logging import CustomFormatter
 
 from pydantic import BaseSettings, Field, SecretStr
+
+from app.common.custom_logging import CustomFormatter
 
 
 class EnvironmentTypes(Enum):
@@ -60,17 +61,17 @@ class BaseAppSettings(BaseSettings):
         return logging.getLogger(__name__)
 
     def configure_logging(self) -> None:
-        logLever = (logging.INFO, logging.DEBUG)[self.debug]
+        log_lever = (logging.INFO, logging.DEBUG)[self.debug]
         logger = self.get_logger()
-        logger.setLevel(logLever)
+        logger.setLevel(log_lever)
         # Define format for logs
-        fmt = '%(asctime)s | %(levelname)8s | %(message)s'
+        fmt = "%(asctime)s | %(levelname)8s | %(message)s"
         """Configure and format logging used in app."""
         # logging.basicConfig()
-        # logging.getLogger('sqlalchemy.engine').setLevel(logLever)
+        # logging.getLogger('sqlalchemy.engine').setLevel(log_lever)
         # Create stdout handler for logging to the console (logs all five levels)
         stdout_handler = logging.StreamHandler()
-        stdout_handler.setLevel(logLever)
+        stdout_handler.setLevel(log_lever)
         stdout_handler.setFormatter(CustomFormatter(fmt))
 
         logger.addHandler(stdout_handler)
