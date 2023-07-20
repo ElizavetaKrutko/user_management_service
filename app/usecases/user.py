@@ -8,6 +8,7 @@ from app.domain.user import User
 from app.ports.redis_port import NoSqlDBRepositoryPort
 from app.ports.user_port import UserRepositoryPort
 from app.rest.routes import schemas
+from app.rest.routes.filters import UsersFilter
 
 
 class UserUseCase:
@@ -47,9 +48,10 @@ class UserUseCase:
                 detail="Could not find user",
             )
 
-        if (
-            user_data.role == Role.ADMIN or user_data.role == Role.MODERATOR
-        ) and db_user_needed.group_id == user_data.group_id:
+        if user_data.role == Role.ADMIN or (
+            user_data.role == Role.MODERATOR
+            and db_user_needed.group_id == user_data.group_id
+        ):
             return schemas.UserInfo.from_orm(db_user_needed)
         else:
             raise HTTPException(
@@ -84,6 +86,33 @@ class UserUseCase:
                 raise HTTPException(status_code=400, detail=err_msg)
 
             return schemas.UserPublicInfo.from_orm(updated_user)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No permissions",
+            )
+
+    async def get_users_with_queries(
+        self, user_data: schemas.UserInfo, users_filter: UsersFilter
+    ):
+        if user_data.role == Role.ADMIN:
+            try:
+                db_user_needed = await self.db_repo.get_users_by_filters(users_filter)
+            except exc.IntegrityError as err:
+                err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
+                raise HTTPException(status_code=400, detail=err_msg)
+            return db_user_needed
+
+        elif user_data.role == Role.MODERATOR:
+            try:
+                db_user_needed = await self.db_repo.get_users_by_filters(
+                    users_filter, user_data.group_id
+                )
+            except exc.IntegrityError as err:
+                err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
+                raise HTTPException(status_code=400, detail=err_msg)
+            return db_user_needed
+
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

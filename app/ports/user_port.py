@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from app.domain.user import User
+from app.rest.routes.filters import UsersFilter
 
 
 class UserRepositoryPort(ABC):
@@ -24,4 +25,8 @@ class UserRepositoryPort(ABC):
 
     @abstractmethod
     def delete_user(self, user_id: UUID):
+        pass
+
+    @abstractmethod
+    def get_users_by_filters(self, users_filter: UsersFilter, group_id: int):
         pass

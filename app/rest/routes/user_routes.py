@@ -1,10 +1,13 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends
+from fastapi_filter import FilterDepends
+from fastapi_pagination import Page
 
 from app.dependencies.security import get_user_from_access_token
 from app.dependencies.usecase_dependencies import get_user_management_use_case
 from app.rest.routes import schemas
+from app.rest.routes.filters import UsersFilter
 from app.usecases.user import UserUseCase
 
 router = APIRouter(prefix="/api/v1", tags=["user", "users"])
@@ -33,7 +36,7 @@ async def delete_me(
     return f"User with id= {deleted_user_id} was successfully deleted"
 
 
-@router.get("/user/{user_id}")
+@router.get("/user/{user_id}", response_model=schemas.UserPublicInfo)
 async def get_another_user_by_id(
     user_id: UUID,
     user_use_case: UserUseCase = Depends(get_user_management_use_case),
@@ -62,18 +65,17 @@ async def edit_another_user_by_id(
     )
 
 
-@router.get("/users")
-async def get_users(
-    page: int = 1,
-    limit: int = 30,
-    filter_by_name: str = "",
-    sort_by: str = "id",
-    order_by: str = "asc",
+@router.get("/users", response_model=Page[schemas.UserPublicInfo])
+async def get_users_with_queries(
+    user_use_case: UserUseCase = Depends(get_user_management_use_case),
+    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+    users_filter: UsersFilter = FilterDepends(UsersFilter),
 ):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     #                   Should check if the requester is (ADMIN) OR (MODERATOR of the group that the user belongs to)
     # Should GET the users
     # Returns a collection of users based on filtering and pagination parameters:
+    # page: int = 1, limit: int = 30, filter_by_name: str = "", sort_by: str = "id", order_by: str = "asc"
     # * Returns all users if requester is an ADMIN.
     # * Returns users related to the group if requester is a MODERATOR.
-    return "Not implemented"
+    return await user_use_case.get_users_with_queries(user_data, users_filter)

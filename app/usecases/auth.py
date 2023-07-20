@@ -1,4 +1,3 @@
-from app.common.config import logger
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Union
@@ -8,7 +7,7 @@ from jose import jwt
 from sqlalchemy import exc
 
 from app.common import utils
-from app.common.config import settings
+from app.common.config import logger, settings
 from app.domain.user import User
 from app.ports.redis_port import NoSqlDBRepositoryPort
 from app.ports.user_port import UserRepositoryPort
@@ -105,6 +104,12 @@ class AuthManagementUseCase:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password"
             )
+
+        if current_user.is_blocked:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="User is blocked"
+            )
+
         return await self.create_jwt_token(current_user.id)
 
     async def logout_user(self, subject: uuid.UUID):

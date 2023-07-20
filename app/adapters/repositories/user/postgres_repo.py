@@ -1,14 +1,15 @@
 import uuid
 
-from app.common.config import logger
-
-from sqlalchemy import exc, or_, select, update, delete
+from fastapi_pagination import paginate
+from sqlalchemy import delete, exc, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.orm_engines.models import UserORM
 from app.common import utils
+from app.common.config import logger
 from app.domain.user import User
 from app.ports.user_port import UserRepositoryPort
+from app.rest.routes.filters import UsersFilter
 
 
 class SQLAlchemyUserRepository(UserRepositoryPort):
@@ -77,10 +78,10 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
     async def update_user_by_id(self, new_user_data: User, user_id: uuid.UUID):
         try:
             updated_user_data = (
-                update(UserORM).
-                where(UserORM.id == user_id).
-                values(new_user_data.dict()).
-                returning(UserORM)
+                update(UserORM)
+                .where(UserORM.id == user_id)
+                .values(new_user_data.dict())
+                .returning(UserORM)
             )
             result = await self.db.execute(updated_user_data)
             await self.db.commit()
@@ -92,7 +93,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
     async def delete_user(self, user_id: uuid.UUID):
         try:
-            user_request = (delete(UserORM).where(UserORM.id == user_id))
+            user_request = delete(UserORM).where(UserORM.id == user_id)
             await self.db.execute(user_request)
             await self.db.commit()
             return user_id
@@ -100,3 +101,13 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
         except exc.IntegrityError as e:
             await self.db.rollback()
             raise e
+
+    async def get_users_by_filters(self, users_filter: UsersFilter, group_id=None):
+        query = users_filter.filter(select(UserORM))
+        query = users_filter.sort(query)
+        if group_id is None:
+            result = await self.db.execute(query)
+        else:
+            new_query = query.filter(UserORM.group_id == group_id)
+            result = await self.db.execute(new_query)
+        return paginate(result.scalars().all())
