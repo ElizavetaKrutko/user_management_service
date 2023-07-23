@@ -27,6 +27,7 @@ python-multipart = "^0.0.6"
 logging = "^0.4.9.6"
 fastapi-filter = "^0.6.1"
 fastapi-pagination = "^0.12.6"
+boto3 = "^1.28.9"
 
 
 [build-system]

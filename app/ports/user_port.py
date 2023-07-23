@@ -7,7 +7,6 @@ from app.rest.routes.filters import UsersFilter
 
 class UserRepositoryPort(ABC):
     @abstractmethod
-    # TODO: add input parameters, annotation
     async def create_user(self, new_user_data: User) -> User:
         pass
 

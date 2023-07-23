@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -16,7 +16,7 @@ class Role(Enum):
 @dataclass
 class User:
     password: Optional[str] = None
-    role: Role = Role.USER
+    role: Role = None
     name: Optional[str] = None
     surname: Optional[str] = None
     username: str = None
@@ -24,7 +24,7 @@ class User:
     email: str = None
     image_path: Optional[str] = None
     group_id: Group = None
-    is_blocked: bool = False
+    is_blocked: bool = None
     id: UUID = None
     login: Optional[str] = None
     hashed_password: Optional[str] = None

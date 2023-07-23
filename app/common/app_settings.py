@@ -20,9 +20,13 @@ class BaseAppSettings(BaseSettings):
     title: str = "User management service"
     version: str = "0.1.0"
     allowed_hosts: list[str] = ["*"]
+    app_url: str = Field("https://myapp.com", env="APP_URL")
     algorithm: str = Field("HS256", env="ALGORITHM")
     jwt_access_secret_key: str = Field("abracadabra", env="JWT_ACCESS_SECRET_KEY")
     jwt_refresh_secret_key: str = Field("avadacedabra", env="JWT_REFRESH_SECRET_KEY")
+    jwt_reset_password_secret_key: str = Field(
+        "abracadabraLALA", env="JWT_RESET_PASSWORD_SECRET_KEY"
+    )
     db_driver_name: str = "postgresql+asyncpg"
     db_username: str = Field("postgres", env="DB_USERNAME")
     db_host: str = Field("postgres", env="DB_HOST")

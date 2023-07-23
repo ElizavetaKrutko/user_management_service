@@ -1,7 +1,8 @@
-from app.common.config import logger
+import uuid
 
 import aioredis
 
+from app.common.config import logger
 from app.ports.redis_port import NoSqlDBRepositoryPort
 
 
@@ -126,3 +127,16 @@ class RedisRepository(NoSqlDBRepositoryPort):
 
         await self.redis.close()
 
+    async def save_reset_password_token(self, user_id: uuid.UUID, token: str):
+        reset_password_token_key = str(user_id) + ":reset_password_token"
+        reset_password_token = await self.redis.set(reset_password_token_key, token)
+        await self.redis.expire(reset_password_token_key, 600)
+        logger.debug(reset_password_token)
+        await self.redis.close()
+
+    async def get_reset_password_token(self, user_id: uuid.UUID):
+        reset_password_token_key = str(user_id) + ":reset_password_token"
+        reset_password_token = await self.redis.get(reset_password_token_key)
+        logger.debug(reset_password_token)
+        await self.redis.close()
+        return reset_password_token

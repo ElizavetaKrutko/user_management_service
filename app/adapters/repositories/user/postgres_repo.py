@@ -76,6 +76,8 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
         return res.scalars().first()
 
     async def update_user_by_id(self, new_user_data: User, user_id: uuid.UUID):
+        logger.debug(new_user_data)
+        logger.debug(user_id)
         try:
             updated_user_data = (
                 update(UserORM)

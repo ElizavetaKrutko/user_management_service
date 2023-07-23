@@ -8,7 +8,9 @@ from sqlalchemy import exc
 
 from app.common import utils
 from app.common.config import logger, settings
+from app.common.utils import get_hashed_password
 from app.domain.user import User
+from app.ports.cloud_port import CloudRepositoryPort
 from app.ports.redis_port import NoSqlDBRepositoryPort
 from app.ports.user_port import UserRepositoryPort
 from app.rest.routes import schemas
@@ -19,10 +21,14 @@ REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
 class AuthManagementUseCase:
     def __init__(
-        self, db_repo: UserRepositoryPort, no_sql_db_repo: NoSqlDBRepositoryPort
+        self,
+        db_repo: UserRepositoryPort,
+        no_sql_db_repo: NoSqlDBRepositoryPort,
+        cloud_repo: CloudRepositoryPort,
     ):
         self.db_repo = db_repo
         self.no_sql_db_repo = no_sql_db_repo
+        self.cloud_repo = cloud_repo
 
     async def create_jwt_token(self, subject: Union[str, Any]):
         jwt_uuid = uuid.uuid4()
@@ -115,3 +121,48 @@ class AuthManagementUseCase:
     async def logout_user(self, subject: uuid.UUID):
         await self.no_sql_db_repo.blacklist_jwt(subject)
         return "The user logged out"
+
+    async def send_reset_password_email(self, user_data: User):
+        db_user = await self.db_repo.get_user_by_login(user_data.email)
+        if db_user:
+            to_encode = {"sub": str(db_user.id), "dummy_uuid": str(uuid.uuid4())}
+            encoded_jwt = jwt.encode(
+                to_encode, settings.jwt_reset_password_secret_key, settings.algorithm
+            )
+            await self.no_sql_db_repo.save_reset_password_token(db_user.id, encoded_jwt)
+
+            reset_password_url = (
+                f"{settings.app_url}/reset-password?token={encoded_jwt}"
+            )
+            await self.cloud_repo.send_reset_password_email(
+                user_data.email, reset_password_url
+            )
+            return reset_password_url
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="User doesn't exist"
+            )
+
+    async def update_password(self, user_data: User, token: str):
+        payload = jwt.decode(
+            token,
+            settings.jwt_reset_password_secret_key,
+            algorithms=[settings.algorithm],
+            options={"verify_exp": False},
+        )
+        token_data = schemas.ResetPasswordTokenPayload(**payload)
+        redis_token = await self.no_sql_db_repo.get_reset_password_token(token_data.sub)
+        if redis_token:
+            if redis_token == token:
+                hashed_password = get_hashed_password(user_data.password)
+                await self.db_repo.update_user_by_id(
+                    User(hashed_password=hashed_password), token_data.sub
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalid"
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Token expired"
+            )

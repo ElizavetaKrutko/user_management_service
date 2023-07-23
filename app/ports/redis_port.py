@@ -16,5 +16,13 @@ class NoSqlDBRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def delete_users_tokens(self, user_id: UUID):
+    async def delete_users_tokens(self, user_id: UUID):
+        pass
+
+    @abstractmethod
+    async def save_reset_password_token(self, user_id: UUID, token: str):
+        pass
+
+    @abstractmethod
+    async def get_reset_password_token(self, user_id: UUID):
         pass
