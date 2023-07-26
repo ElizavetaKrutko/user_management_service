@@ -30,7 +30,9 @@ class UserORM(Base):
     image_path: Mapped[str] = mapped_column(nullable=True)
     is_blocked: Mapped[bool] = mapped_column(nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
-    modified_at: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    modified_at: Mapped[datetime.datetime] = mapped_column(
+        onupdate=func.now(), nullable=True
+    )
     group_id: Mapped[int] = mapped_column(ForeignKey("group_table.id"))
 
     groups: Mapped["GroupORM"] = relationship(back_populates="users")

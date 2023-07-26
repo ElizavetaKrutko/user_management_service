@@ -1,4 +1,6 @@
-import logging
+from uuid import UUID
+
+from app.common.config import logger
 from datetime import datetime
 
 from fastapi import Depends, HTTPException, status
@@ -48,7 +50,7 @@ async def get_user_from_jwt(
     token: str,
 ) -> schemas.UserBaseRead:
     try:
-        logging.debug(token, secret_key)
+        logger.debug(token, secret_key)
         payload = jwt.decode(
             token,
             secret_key,
@@ -88,4 +90,4 @@ async def get_user_from_jwt(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    return schemas.UserBaseRead.from_orm(db_user)
+    return schemas.UserInfo.from_orm(db_user)

@@ -4,6 +4,8 @@ from typing import Any
 
 from pydantic import BaseSettings, Field, SecretStr
 
+from app.common.custom_logging import CustomFormatter
+
 
 class EnvironmentTypes(Enum):
     test: str = "test"
@@ -14,13 +16,17 @@ class EnvironmentTypes(Enum):
 
 class BaseAppSettings(BaseSettings):
     environment: EnvironmentTypes = Field(EnvironmentTypes.local, env="API_ENVIRONMENT")
-    debug: bool = True
+    debug: bool = Field(True, env="DEBUG_MODE")
     title: str = "User management service"
     version: str = "0.1.0"
     allowed_hosts: list[str] = ["*"]
+    app_url: str = Field("https://myapp.com", env="APP_URL")
     algorithm: str = Field("HS256", env="ALGORITHM")
     jwt_access_secret_key: str = Field("abracadabra", env="JWT_ACCESS_SECRET_KEY")
     jwt_refresh_secret_key: str = Field("avadacedabra", env="JWT_REFRESH_SECRET_KEY")
+    jwt_reset_password_secret_key: str = Field(
+        "abracadabraLALA", env="JWT_RESET_PASSWORD_SECRET_KEY"
+    )
     db_driver_name: str = "postgresql+asyncpg"
     db_username: str = Field("postgres", env="DB_USERNAME")
     db_host: str = Field("postgres", env="DB_HOST")
@@ -54,6 +60,25 @@ class BaseAppSettings(BaseSettings):
             "title": self.title,
             "version": self.version,
         }
+
+    def get_logger(self) -> logging.Logger:
+        return logging.getLogger(__name__)
+
+    def configure_logging(self) -> None:
+        log_lever = (logging.INFO, logging.DEBUG)[self.debug]
+        logger = self.get_logger()
+        logger.setLevel(log_lever)
+        # Define format for logs
+        fmt = "%(asctime)s | %(levelname)8s | %(message)s"
+        """Configure and format logging used in app."""
+        # logging.basicConfig()
+        # logging.getLogger('sqlalchemy.engine').setLevel(log_lever)
+        # Create stdout handler for logging to the console (logs all five levels)
+        stdout_handler = logging.StreamHandler()
+        stdout_handler.setLevel(log_lever)
+        stdout_handler.setFormatter(CustomFormatter(fmt))
+
+        logger.addHandler(stdout_handler)
 
 
 class TestSettings(BaseAppSettings):

@@ -1,15 +1,17 @@
-import logging
+import uuid
 
-from sqlalchemy import exc, or_, select
+from fastapi_pagination import paginate
+from sqlalchemy import delete, exc, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.orm_engines.models import UserORM
 from app.common import utils
+from app.common.config import logger
 from app.domain.user import User
 from app.ports.user_port import UserRepositoryPort
+from app.rest.routes.filters import UsersFilter
 
 
-# inherit from postgresPort, add domains, not SQLAlchemy objects
 class SQLAlchemyUserRepository(UserRepositoryPort):
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
@@ -22,7 +24,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
             db_new_user = await self.__create_orm_user(new_user_data)
 
-            logging.info(f"Created new entity: {db_new_user}.")
+            logger.info(f"Created new entity: {db_new_user}.")
 
             return db_new_user
 
@@ -54,7 +56,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
     async def get_user_by_id(self, user_id):
         db_user = select(UserORM).where(UserORM.id == user_id)
         res = await self.db.execute(db_user)
-        logging.debug(res)
+        logger.debug(res)
         return res.scalars().first()
 
     async def get_user_by_login(self, username, email=None, phone_number=None):
@@ -72,3 +74,42 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
         res = await self.db.execute(stmt)
 
         return res.scalars().first()
+
+    async def update_user_by_id(self, new_user_data: User, user_id: uuid.UUID):
+        logger.debug(new_user_data)
+        logger.debug(user_id)
+        try:
+            updated_user_data = (
+                update(UserORM)
+                .where(UserORM.id == user_id)
+                .values(new_user_data.dict())
+                .returning(UserORM)
+            )
+            result = await self.db.execute(updated_user_data)
+            await self.db.commit()
+            return result.scalars().first()
+
+        except exc.IntegrityError as e:
+            await self.db.rollback()
+            raise e
+
+    async def delete_user(self, user_id: uuid.UUID):
+        try:
+            user_request = delete(UserORM).where(UserORM.id == user_id)
+            await self.db.execute(user_request)
+            await self.db.commit()
+            return user_id
+
+        except exc.IntegrityError as e:
+            await self.db.rollback()
+            raise e
+
+    async def get_users_by_filters(self, users_filter: UsersFilter, group_id=None):
+        query = users_filter.filter(select(UserORM))
+        query = users_filter.sort(query)
+        if group_id is None:
+            result = await self.db.execute(query)
+        else:
+            new_query = query.filter(UserORM.group_id == group_id)
+            result = await self.db.execute(new_query)
+        return paginate(result.scalars().all())

@@ -34,7 +34,7 @@ async def login(
 @router.post("/logout")
 async def logout(
     auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
-    user_data: schemas.UserBaseRead = Depends(get_user_from_access_token),
+    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
 ):
     return await auth_use_case.logout_user(user_data.id)
 
@@ -42,7 +42,7 @@ async def logout(
 @router.post("/refresh-token", response_model=schemas.TokensResponseSchema)
 async def refresh_token(
     auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
-    user_data: schemas.UserBaseRead = Depends(get_user_from_refresh_token),
+    user_data: schemas.UserInfo = Depends(get_user_from_refresh_token),
 ):
     # Accepts refresh token and returns new access and refresh tokens.
     # Old refresh token is blacklisted using Redis and check is tokens from response in blacklist
@@ -50,12 +50,18 @@ async def refresh_token(
     return await auth_use_case.create_jwt_token(user_data.id)
 
 
+@router.post("/request-password-reset")
+async def reset_password(
+    user_data: schemas.UserRequestResetPassword,
+    auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
+):
+    return await auth_use_case.send_reset_password_email(user_data.to_entity())
+
+
 @router.post("/reset-password")
 async def reset_password(
+    user_data: schemas.UserResetPassword,
+    token: str,
     auth_use_case: AuthManagementUseCase = Depends(get_auth_management_use_case),
-    user_data: schemas.UserBaseRead = Depends(get_user_from_access_token),
 ):
-    # NO AUTHORIZATION
-    # Accepts the user's email address and sends an email with a link to reset the password.
-    # Another optional endpoint can be added to implement this logic - ?
-    return "Not implemented"
+    return await auth_use_case.update_password(user_data.to_entity(), token)

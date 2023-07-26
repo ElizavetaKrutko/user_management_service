@@ -18,10 +18,37 @@ class TokenPayload(BaseModel):
     jwt_uuid: UUID
 
 
+class ResetPasswordTokenPayload(BaseModel):
+    sub: UUID
+
+
 class UserBaseRead(BaseModel):
     id: UUID
     role: Role
     group_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class UserInfo(UserBaseRead):
+    name: Optional[str]
+    surname: Optional[str]
+    username: str
+    phone_number: str
+    email: str
+    image_path: Optional[str]
+    is_blocked: Optional[bool] = False
+
+
+class UserPublicInfo(BaseModel):
+    name: Optional[str]
+    surname: Optional[str]
+    username: str
+    phone_number: str
+    email: str
+    role: Optional[Role] = None
+    image_path: Optional[str]
 
     class Config:
         orm_mode = True
@@ -75,6 +102,37 @@ class UserUpdate(BaseModel):
     password: Optional[str]
     phone_number: Optional[str]
     email: Optional[str]
-    role: Optional[str]
+    role: Optional[Role]
     image_path: Optional[str]
-    is_blocked: Optional[str]
+    is_blocked: Optional[bool]
+
+    def to_entity(self):
+        return User(
+            name=self.name,
+            surname=self.surname,
+            username=self.username,
+            password=self.password,
+            phone_number=self.phone_number,
+            email=self.email,
+            role=self.role,
+            image_path=self.image_path,
+            is_blocked=self.is_blocked,
+        )
+
+
+class UserRequestResetPassword(BaseModel):
+    email: str
+
+    def to_entity(self):
+        return User(
+            email=self.email,
+        )
+
+
+class UserResetPassword(BaseModel):
+    password: str
+
+    def to_entity(self):
+        return User(
+            password=self.password,
+        )
