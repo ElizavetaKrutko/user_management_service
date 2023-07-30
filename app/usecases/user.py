@@ -1,9 +1,7 @@
 import uuid
 
-from fastapi import HTTPException, status
-from sqlalchemy import exc
-
 from app.adapters.orm_engines.models import Role
+from app.common.exceptions.base_exceptions import BaseAppExceptions
 from app.domain.user import User
 from app.ports.redis_port import NoSqlDBRepositoryPort
 from app.ports.user_port import UserRepositoryPort
@@ -13,104 +11,66 @@ from app.rest.routes.filters import UsersFilter
 
 class UserUseCase:
     def __init__(
-        self, db_repo: UserRepositoryPort, no_sql_db_repo: NoSqlDBRepositoryPort
+            self,
+            db_repo: UserRepositoryPort,
+            no_sql_db_repo: NoSqlDBRepositoryPort,
+            app_exceptions: BaseAppExceptions
     ):
         self.db_repo = db_repo
         self.no_sql_db_repo = no_sql_db_repo
+        self.app_exceptions = app_exceptions
 
     async def patch_user(self, new_user_data: User, user_id: uuid.UUID):
-        try:
-            return await self.db_repo.update_user_by_id(new_user_data, user_id)
-
-        except exc.IntegrityError as err:
-            err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
-            raise HTTPException(status_code=400, detail=err_msg)
+        return await self.db_repo.update_user_by_id(new_user_data, user_id)
 
     async def delete_user(self, user_id: uuid.UUID):
-        try:
-            deleted_user_id = await self.db_repo.delete_user(user_id)
-            await self.no_sql_db_repo.delete_users_tokens(user_id)
-            return deleted_user_id
-
-        except exc.IntegrityError as err:
-            err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
-            raise HTTPException(status_code=400, detail=err_msg)
+        deleted_user_id = await self.db_repo.delete_user(user_id)
+        await self.no_sql_db_repo.delete_users_tokens(user_id)
+        return deleted_user_id
 
     async def get_another_user_by_id(
-        self, user_id_needed: uuid.UUID, user_data: schemas.UserInfo
+            self, user_id_needed: uuid.UUID, user_data: schemas.UserInfo
     ):
         db_user_needed = await self.db_repo.get_user_by_id(user_id=user_id_needed)
 
         if db_user_needed is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Could not find user",
-            )
+            raise self.app_exceptions.no_data_error(message="Could not find user")
 
         if user_data.role == Role.ADMIN or (
-            user_data.role == Role.MODERATOR
-            and db_user_needed.group_id == user_data.group_id
+                user_data.role == Role.MODERATOR
+                and db_user_needed.group_id == user_data.group_id
         ):
             return db_user_needed
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No permissions",
-            )
+            raise self.app_exceptions.no_permissions_error(message="No permissions")
 
     async def edit_another_user_by_id(
-        self,
-        new_user_data: User,
-        user_id_needed: uuid.UUID,
-        user_data: schemas.UserInfo,
+            self,
+            new_user_data: User,
+            user_id_needed: uuid.UUID,
+            user_data: schemas.UserInfo,
     ):
         db_user_needed = await self.db_repo.get_user_by_id(user_id=user_id_needed)
 
         if db_user_needed is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Could not find user",
-            )
+            raise self.app_exceptions.no_data_error(message="Could not find user")
 
         if user_data.role == Role.ADMIN:
-            try:
-                updated_user = await self.db_repo.update_user_by_id(
+            updated_user = await self.db_repo.update_user_by_id(
                     new_user_data, user_id_needed
                 )
-            except exc.IntegrityError as err:
-                err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
-                raise HTTPException(status_code=400, detail=err_msg)
-
             return updated_user
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No permissions",
-            )
+            raise self.app_exceptions.no_permissions_error(message="No permissions")
 
     async def get_users_with_queries(
-        self, user_data: schemas.UserInfo, users_filter: UsersFilter
+            self, user_data: schemas.UserInfo, users_filter: UsersFilter
     ):
         if user_data.role == Role.ADMIN:
-            try:
-                db_user_needed = await self.db_repo.get_users_by_filters(users_filter)
-            except exc.IntegrityError as err:
-                err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
-                raise HTTPException(status_code=400, detail=err_msg)
-            return db_user_needed
-
+            return await self.db_repo.get_users_by_filters(users_filter)
         elif user_data.role == Role.MODERATOR:
-            try:
-                db_user_needed = await self.db_repo.get_users_by_filters(
+            return await self.db_repo.get_users_by_filters(
                     users_filter, user_data.group_id
                 )
-            except exc.IntegrityError as err:
-                err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
-                raise HTTPException(status_code=400, detail=err_msg)
-            return db_user_needed
-
         else:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No permissions",
-            )
+            raise self.app_exceptions.no_permissions_error(message="No permissions")

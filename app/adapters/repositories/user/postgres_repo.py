@@ -10,13 +10,14 @@ from app.common.config import logger
 from app.domain.user import User
 from app.ports.user_port import UserRepositoryPort
 from app.rest.routes.filters import UsersFilter
+from app.common.exceptions.fast_api_sql_alchemy_exceptions import ORMError
 
 
 class SQLAlchemyUserRepository(UserRepositoryPort):
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def __convert_to_domain(self, user_from_db):
+    def __convert_to_domain(self, user_from_db) -> User:
         user_as_domain = User(
             role=user_from_db.role,
             name=user_from_db.name,
@@ -48,7 +49,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
         except exc.IntegrityError as e:
             await self.db.rollback()
-            raise e
+            raise ORMError(e).bad_request_error()
 
     async def __create_orm_user(self, new_user_data):
         db_new_user = UserORM()
@@ -71,11 +72,11 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
         return db_new_user
 
-    async def get_user_by_id(self, user_id: uuid.UUID):
+    async def get_user_by_id(self, user_id: uuid.UUID) -> User:
         db_user = select(UserORM).where(UserORM.id == user_id)
         res = await self.db.execute(db_user)
         logger.debug(res)
-        return await self.__convert_to_domain(res.scalars().first())
+        return self.__convert_to_domain(res.scalars().first())
 
     async def get_user_by_login(self, username, email=None, phone_number=None):
         if email is None:
@@ -93,7 +94,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
         return res.scalars().first()
 
-    async def update_user_by_id(self, new_user_data: User, user_id: uuid.UUID):
+    async def update_user_by_id(self, new_user_data: User, user_id: uuid.UUID) -> User:
         logger.debug(new_user_data)
         logger.debug(user_id)
         try:
@@ -105,11 +106,11 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
             )
             result = await self.db.execute(updated_user_data)
             await self.db.commit()
-            return await self.__convert_to_domain(result.scalars().first())
+            return self.__convert_to_domain(result.scalars().first())
 
         except exc.IntegrityError as e:
             await self.db.rollback()
-            raise e
+            raise ORMError(e).bad_request_error()
 
     async def delete_user(self, user_id: uuid.UUID):
         try:
@@ -120,14 +121,17 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
         except exc.IntegrityError as e:
             await self.db.rollback()
-            raise e
+            raise ORMError(e).bad_request_error()
 
     async def get_users_by_filters(self, users_filter: UsersFilter, group_id=None):
-        query = users_filter.filter(select(UserORM))
-        query = users_filter.sort(query)
-        if group_id is None:
-            result = await self.db.execute(query)
-        else:
-            new_query = query.filter(UserORM.group_id == group_id)
-            result = await self.db.execute(new_query)
-        return paginate(result.scalars().all())
+        try:
+            query = users_filter.filter(select(UserORM))
+            query = users_filter.sort(query)
+            if group_id is None:
+                result = await self.db.execute(query)
+            else:
+                new_query = query.filter(UserORM.group_id == group_id)
+                result = await self.db.execute(new_query)
+            return paginate(result.scalars().all())
+        except exc.IntegrityError as e:
+            raise ORMError(e).bad_request_error()

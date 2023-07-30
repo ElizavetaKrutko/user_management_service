@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from app.common import app_settings
+from app.common.exceptions.fast_api_sql_alchemy_exceptions import AppExceptions
 
 environments = {
     app_settings.EnvironmentTypes.dev: app_settings.DevelopmentSettings,
@@ -18,3 +19,4 @@ def get_settings() -> app_settings.BaseAppSettings:
 
 settings = get_settings()
 logger = settings.get_logger()
+app_exceptions = AppExceptions()

@@ -1,6 +1,5 @@
 import uuid
 
-from app.common.config import logger
 from app.ports.redis_port import NoSqlDBRepositoryPort
 
 

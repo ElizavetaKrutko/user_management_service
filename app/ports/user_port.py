@@ -27,5 +27,5 @@ class UserRepositoryPort(ABC):
         pass
 
     @abstractmethod
-    def get_users_by_filters(self, users_filter: UsersFilter, group_id: int):
+    def get_users_by_filters(self, users_filter: UsersFilter, group_id: int = None):
         pass

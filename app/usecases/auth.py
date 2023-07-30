@@ -2,12 +2,11 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Union
 
-from fastapi import HTTPException, status
 from jose import jwt
-from sqlalchemy import exc
 
 from app.common import utils
 from app.common.config import logger, settings
+from app.common.exceptions.base_exceptions import BaseAppExceptions
 from app.common.utils import get_hashed_password
 from app.domain.user import User
 from app.ports.cloud_port import CloudRepositoryPort
@@ -21,14 +20,16 @@ REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
 class AuthManagementUseCase:
     def __init__(
-        self,
-        db_repo: UserRepositoryPort,
-        no_sql_db_repo: NoSqlDBRepositoryPort,
-        cloud_repo: CloudRepositoryPort,
+            self,
+            db_repo: UserRepositoryPort,
+            no_sql_db_repo: NoSqlDBRepositoryPort,
+            cloud_repo: CloudRepositoryPort,
+            app_exceptions: BaseAppExceptions
     ):
         self.db_repo = db_repo
         self.no_sql_db_repo = no_sql_db_repo
         self.cloud_repo = cloud_repo
+        self.app_exceptions = app_exceptions
 
     async def create_jwt_token(self, subject: Union[str, Any]):
         jwt_uuid = uuid.uuid4()
@@ -57,7 +58,7 @@ class AuthManagementUseCase:
         return encoded_jwt
 
     def create_refresh_token(
-        self, subject: Union[str, Any], jwt_uuid: uuid.UUID
+            self, subject: Union[str, Any], jwt_uuid: uuid.UUID
     ) -> str:
         expires_delta = datetime.utcnow() + timedelta(
             minutes=REFRESH_TOKEN_EXPIRE_MINUTES
@@ -74,47 +75,35 @@ class AuthManagementUseCase:
         return encoded_jwt
 
     async def create_user(self, new_user_data: User):
-        try:
-            duplicate_user = await self.db_repo.get_user_by_login(
-                new_user_data.username, new_user_data.email, new_user_data.phone_number
-            )
-            if duplicate_user:
-                error_message = ""
-                if duplicate_user.username == new_user_data.username:
-                    error_message = "User with provided user name already exists!"
-                elif duplicate_user.email == new_user_data.email:
-                    error_message = "User with provided email already exists!"
-                elif duplicate_user.phone_number == new_user_data.phone_number:
-                    error_message = "User with provided phone number already exists!"
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail=error_message
-                )
-            else:
-                created_user = await self.db_repo.create_user(new_user_data)
+        duplicate_user = await self.db_repo.get_user_by_login(
+            new_user_data.username, new_user_data.email, new_user_data.phone_number
+        )
+        if duplicate_user:
+            error_message = ""
+            if duplicate_user.username == new_user_data.username:
+                error_message = "User with provided user name already exists!"
+            elif duplicate_user.email == new_user_data.email:
+                error_message = "User with provided email already exists!"
+            elif duplicate_user.phone_number == new_user_data.phone_number:
+                error_message = "User with provided phone number already exists!"
+            raise self.app_exceptions.bad_request_error(message=error_message)
+        else:
+            created_user = await self.db_repo.create_user(new_user_data)
 
-                return await self.create_jwt_token(created_user.id)
-        except exc.IntegrityError as err:
-            err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
-            raise HTTPException(status_code=400, detail=err_msg)
+            return await self.create_jwt_token(created_user.id)
 
     async def login_user(self, new_user_data: schemas.UserLogin):
         current_user = await self.db_repo.get_user_by_login(new_user_data.login)
         if current_user is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect login"
-            )
+            raise self.app_exceptions.bad_request_error(message="Incorrect login")
 
         if not utils.verify_password(
-            new_user_data.password, current_user.hashed_password
+                new_user_data.password, current_user.hashed_password
         ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password"
-            )
+            raise self.app_exceptions.bad_request_error(message="Incorrect password")
 
         if current_user.is_blocked:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="User is blocked"
-            )
+            raise self.app_exceptions.bad_request_error(message="User is blocked")
 
         return await self.create_jwt_token(current_user.id)
 
@@ -139,9 +128,7 @@ class AuthManagementUseCase:
             )
             return reset_password_url
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="User doesn't exist"
-            )
+            raise self.app_exceptions.bad_request_error(message="User doesn't exist")
 
     async def update_password(self, user_data: User, token: str):
         payload = jwt.decode(
@@ -159,10 +146,6 @@ class AuthManagementUseCase:
                     User(hashed_password=hashed_password), token_data.sub
                 )
             else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, detail="Token invalid"
-                )
+                raise self.app_exceptions.invalid_token_error(message="Token invalid")
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Token expired"
-            )
+            raise self.app_exceptions.invalid_token_error(message="Token expired")

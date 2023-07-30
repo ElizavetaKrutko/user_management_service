@@ -1,8 +1,6 @@
 import uuid
-from abc import ABC
 
 from app.common import utils
-from app.common.config import logger
 from app.domain.user import User
 from app.ports.user_port import UserRepositoryPort
 
