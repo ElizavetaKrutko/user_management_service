@@ -16,6 +16,24 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
+    async def __convert_to_domain(self, user_from_db):
+        user_as_domain = User(
+            role=user_from_db.role,
+            name=user_from_db.name,
+            surname=user_from_db.surname,
+            username=user_from_db.username,
+            phone_number=user_from_db.phone_number,
+            email=user_from_db.email,
+            image_path=user_from_db.image_path,
+            group_id=user_from_db.group_id,
+            is_blocked=user_from_db.is_blocked,
+            id=user_from_db.id,
+            password=user_from_db.hashed_password,
+            created_at=user_from_db.created_at,
+            modified_at=user_from_db.modified_at,
+        )
+        return user_as_domain
+
     async def create_user(self, new_user_data: User):
         try:
             hashed_password = utils.get_hashed_password(new_user_data.password)
@@ -53,11 +71,11 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
         return db_new_user
 
-    async def get_user_by_id(self, user_id):
+    async def get_user_by_id(self, user_id: uuid.UUID):
         db_user = select(UserORM).where(UserORM.id == user_id)
         res = await self.db.execute(db_user)
         logger.debug(res)
-        return res.scalars().first()
+        return await self.__convert_to_domain(res.scalars().first())
 
     async def get_user_by_login(self, username, email=None, phone_number=None):
         if email is None:
@@ -87,7 +105,7 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
             )
             result = await self.db.execute(updated_user_data)
             await self.db.commit()
-            return result.scalars().first()
+            return await self.__convert_to_domain(result.scalars().first())
 
         except exc.IntegrityError as e:
             await self.db.rollback()

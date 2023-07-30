@@ -49,7 +49,7 @@ async def get_another_user_by_id(
     return await user_use_case.get_another_user_by_id(user_id, user_data)
 
 
-@router.patch("/user/{user_id}")
+@router.patch("/user/{user_id}", response_model=schemas.UserPublicInfo)
 async def edit_another_user_by_id(
     modified_user_data: schemas.UserUpdate,
     user_id: UUID,

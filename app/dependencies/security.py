@@ -1,7 +1,5 @@
-from uuid import UUID
-
-from app.common.config import logger
 from datetime import datetime
+from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,8 +9,9 @@ from pydantic import ValidationError
 from app.adapters.repositories.redis_repo import RedisRepository
 from app.adapters.repositories.user.postgres_repo import \
     SQLAlchemyUserRepository
-from app.common.config import settings
+from app.common.config import logger, settings
 from app.dependencies.database import get_db
+from app.domain.user import User
 from app.rest.routes import schemas
 
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -48,7 +47,7 @@ async def get_user_from_jwt(
     no_sql_db_repo: RedisRepository,
     secret_key: str,
     token: str,
-) -> schemas.UserBaseRead:
+) -> User:
     try:
         logger.debug(token, secret_key)
         payload = jwt.decode(
@@ -90,4 +89,4 @@ async def get_user_from_jwt(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-    return schemas.UserInfo.from_orm(db_user)
+    return db_user

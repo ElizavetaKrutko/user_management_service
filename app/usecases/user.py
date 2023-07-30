@@ -20,8 +20,7 @@ class UserUseCase:
 
     async def patch_user(self, new_user_data: User, user_id: uuid.UUID):
         try:
-            updated_user = await self.db_repo.update_user_by_id(new_user_data, user_id)
-            return schemas.UserPublicInfo.from_orm(updated_user)
+            return await self.db_repo.update_user_by_id(new_user_data, user_id)
 
         except exc.IntegrityError as err:
             err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
@@ -52,7 +51,7 @@ class UserUseCase:
             user_data.role == Role.MODERATOR
             and db_user_needed.group_id == user_data.group_id
         ):
-            return schemas.UserInfo.from_orm(db_user_needed)
+            return db_user_needed
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -73,10 +72,7 @@ class UserUseCase:
                 detail="Could not find user",
             )
 
-        if (
-            user_data.role == Role.ADMIN
-            and db_user_needed.group_id == user_data.group_id
-        ):
+        if user_data.role == Role.ADMIN:
             try:
                 updated_user = await self.db_repo.update_user_by_id(
                     new_user_data, user_id_needed
@@ -85,7 +81,7 @@ class UserUseCase:
                 err_msg = str(err.orig).split(":")[-1].replace("\n", "").strip()
                 raise HTTPException(status_code=400, detail=err_msg)
 
-            return schemas.UserPublicInfo.from_orm(updated_user)
+            return updated_user
         else:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
