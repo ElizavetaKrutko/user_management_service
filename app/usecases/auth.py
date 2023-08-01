@@ -20,11 +20,11 @@ REFRESH_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
 class AuthManagementUseCase:
     def __init__(
-            self,
-            db_repo: UserRepositoryPort,
-            no_sql_db_repo: NoSqlDBRepositoryPort,
-            cloud_repo: CloudRepositoryPort,
-            app_exceptions: BaseAppExceptions
+        self,
+        db_repo: UserRepositoryPort,
+        no_sql_db_repo: NoSqlDBRepositoryPort,
+        cloud_repo: CloudRepositoryPort,
+        app_exceptions: BaseAppExceptions,
     ):
         self.db_repo = db_repo
         self.no_sql_db_repo = no_sql_db_repo
@@ -58,7 +58,7 @@ class AuthManagementUseCase:
         return encoded_jwt
 
     def create_refresh_token(
-            self, subject: Union[str, Any], jwt_uuid: uuid.UUID
+        self, subject: Union[str, Any], jwt_uuid: uuid.UUID
     ) -> str:
         expires_delta = datetime.utcnow() + timedelta(
             minutes=REFRESH_TOKEN_EXPIRE_MINUTES
@@ -92,13 +92,13 @@ class AuthManagementUseCase:
 
             return await self.create_jwt_token(created_user.id)
 
-    async def login_user(self, new_user_data: schemas.UserLogin):
+    async def login_user(self, new_user_data: User):
         current_user = await self.db_repo.get_user_by_login(new_user_data.login)
         if current_user is None:
             raise self.app_exceptions.bad_request_error(message="Incorrect login")
 
         if not utils.verify_password(
-                new_user_data.password, current_user.hashed_password
+            new_user_data.password, current_user.hashed_password
         ):
             raise self.app_exceptions.bad_request_error(message="Incorrect password")
 

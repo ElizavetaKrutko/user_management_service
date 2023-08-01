@@ -6,6 +6,7 @@ from fastapi_pagination import Page
 
 from app.dependencies.security import get_user_from_access_token
 from app.dependencies.usecase_dependencies import get_user_management_use_case
+from app.domain.user import User
 from app.rest.routes import schemas
 from app.rest.routes.filters import UsersFilter
 from app.usecases.user import UserUseCase
@@ -40,7 +41,7 @@ async def delete_me(
 async def get_another_user_by_id(
     user_id: UUID,
     user_use_case: UserUseCase = Depends(get_user_management_use_case),
-    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+    user_data: User = Depends(get_user_from_access_token),
 ):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should check if the requester is (ADMIN) OR (MODERATOR of the group that the requested user belongs to)
@@ -54,7 +55,7 @@ async def edit_another_user_by_id(
     modified_user_data: schemas.UserUpdate,
     user_id: UUID,
     user_use_case: UserUseCase = Depends(get_user_management_use_case),
-    user_data: schemas.UserInfo = Depends(get_user_from_access_token),
+    user_data: User = Depends(get_user_from_access_token),
 ):
     # AUTHORIZATION:    JWT authentication (User ID is extracted from the JWT)
     # Should check if the requester is ADMIN

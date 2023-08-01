@@ -11,10 +11,10 @@ from app.rest.routes.filters import UsersFilter
 
 class UserUseCase:
     def __init__(
-            self,
-            db_repo: UserRepositoryPort,
-            no_sql_db_repo: NoSqlDBRepositoryPort,
-            app_exceptions: BaseAppExceptions
+        self,
+        db_repo: UserRepositoryPort,
+        no_sql_db_repo: NoSqlDBRepositoryPort,
+        app_exceptions: BaseAppExceptions,
     ):
         self.db_repo = db_repo
         self.no_sql_db_repo = no_sql_db_repo
@@ -28,49 +28,47 @@ class UserUseCase:
         await self.no_sql_db_repo.delete_users_tokens(user_id)
         return deleted_user_id
 
-    async def get_another_user_by_id(
-            self, user_id_needed: uuid.UUID, user_data: schemas.UserInfo
-    ):
+    async def get_another_user_by_id(self, user_id_needed: uuid.UUID, user_data: User):
         db_user_needed = await self.db_repo.get_user_by_id(user_id=user_id_needed)
 
         if db_user_needed is None:
             raise self.app_exceptions.no_data_error(message="Could not find user")
 
-        if user_data.role == Role.ADMIN or (
-                user_data.role == Role.MODERATOR
-                and db_user_needed.group_id == user_data.group_id
+        if user_data.role.value == Role.ADMIN.value or (
+            user_data.role == Role.MODERATOR
+            and db_user_needed.group_id == user_data.group_id
         ):
             return db_user_needed
         else:
             raise self.app_exceptions.no_permissions_error(message="No permissions")
 
     async def edit_another_user_by_id(
-            self,
-            new_user_data: User,
-            user_id_needed: uuid.UUID,
-            user_data: schemas.UserInfo,
+        self,
+        new_user_data: User,
+        user_id_needed: uuid.UUID,
+        user_data: User,
     ):
         db_user_needed = await self.db_repo.get_user_by_id(user_id=user_id_needed)
 
         if db_user_needed is None:
             raise self.app_exceptions.no_data_error(message="Could not find user")
 
-        if user_data.role == Role.ADMIN:
+        if user_data.role.value == Role.ADMIN.value:
             updated_user = await self.db_repo.update_user_by_id(
-                    new_user_data, user_id_needed
-                )
+                new_user_data, user_id_needed
+            )
             return updated_user
         else:
             raise self.app_exceptions.no_permissions_error(message="No permissions")
 
     async def get_users_with_queries(
-            self, user_data: schemas.UserInfo, users_filter: UsersFilter
+        self, user_data: schemas.UserInfo, users_filter: UsersFilter
     ):
-        if user_data.role == Role.ADMIN:
+        if user_data.role.value == Role.ADMIN.value:
             return await self.db_repo.get_users_by_filters(users_filter)
         elif user_data.role == Role.MODERATOR:
             return await self.db_repo.get_users_by_filters(
-                    users_filter, user_data.group_id
-                )
+                users_filter, user_data.group_id
+            )
         else:
             raise self.app_exceptions.no_permissions_error(message="No permissions")
