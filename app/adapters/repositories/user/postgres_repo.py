@@ -1,4 +1,5 @@
 import uuid
+from typing import Union
 
 from fastapi_pagination import paginate
 from sqlalchemy import delete, exc, or_, select, update
@@ -7,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.orm_engines.models import UserORM
 from app.common import utils
 from app.common.config import logger
+from app.common.exceptions.fast_api_sql_alchemy_exceptions import ORMError
 from app.domain.user import User
 from app.ports.user_port import UserRepositoryPort
 from app.rest.routes.filters import UsersFilter
-from app.common.exceptions.fast_api_sql_alchemy_exceptions import ORMError
 
 
 class SQLAlchemyUserRepository(UserRepositoryPort):
@@ -72,11 +73,14 @@ class SQLAlchemyUserRepository(UserRepositoryPort):
 
         return db_new_user
 
-    async def get_user_by_id(self, user_id: uuid.UUID) -> User:
+    async def get_user_by_id(self, user_id: uuid.UUID) -> Union[User | None]:
         db_user = select(UserORM).where(UserORM.id == user_id)
         res = await self.db.execute(db_user)
-        logger.debug(res)
-        return self.__convert_to_domain(res.scalars().first())
+        res_db = res.scalars().first()
+        if res_db is not None:
+            return self.__convert_to_domain(res_db)
+        else:
+            return None
 
     async def get_user_by_login(self, username, email=None, phone_number=None):
         if email is None:

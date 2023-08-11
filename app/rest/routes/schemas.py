@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from app.adapters.orm_engines.models import Role
+from app.domain.group import Group
 from app.domain.user import User
 
 
@@ -136,3 +137,11 @@ class UserResetPassword(BaseModel):
         return User(
             password=self.password,
         )
+
+
+class GroupCreate(BaseModel):
+    id: int
+    name: str
+
+    def to_entity(self):
+        return Group(id=self.id, name=self.name)
