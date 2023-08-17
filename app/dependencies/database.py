@@ -16,7 +16,7 @@ class SQLAlchemyDependency:
         self, settings: BaseAppSettings = Depends(get_settings)
     ) -> SQLAlchemy:
         self.sqlalchemy = (
-            SQLAlchemy.start(settings.get_db_creds)
+            SQLAlchemy.start(settings.get_db_url)
             if not self.sqlalchemy
             else self.sqlalchemy
         )

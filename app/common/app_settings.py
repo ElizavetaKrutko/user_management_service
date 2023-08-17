@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any
 
 from pydantic import BaseSettings, Field, SecretStr
+from sqlalchemy import URL
 
 from app.common.custom_logging import CustomFormatter
 
@@ -44,6 +45,10 @@ class BaseAppSettings(BaseSettings):
             "database": self.db_database,
             "password": self.db_password.get_secret_value(),
         }
+
+    @property
+    def get_db_url(self):
+        return URL.create(**self.get_db_creds)
 
     @property
     def get_token_creds(self):
