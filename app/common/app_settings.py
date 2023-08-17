@@ -28,6 +28,13 @@ class BaseAppSettings(BaseSettings):
     jwt_reset_password_secret_key: str = Field(
         "abracadabraLALA", env="JWT_RESET_PASSWORD_SECRET_KEY"
     )
+    aws_access_key_string: str = Field(
+        "AKIAWNR4ADEACKWYFJ4I", env="AWS_ACCESS_KEY_STRING"
+    )
+    aws_secret_key_string: str = Field(
+        "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", env="AWS_SECRET_KEY_STRING"
+    )
+    region_name: str = Field("us-east-1", env="REGION_NAME")
     db_driver_name: str = "postgresql+asyncpg"
     db_username: str = Field("postgres", env="DB_USERNAME")
     db_host: str = Field("postgres", env="DB_HOST")
