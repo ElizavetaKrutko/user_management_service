@@ -50,7 +50,6 @@ jobs:
       - name: Check formatting with black
         run: poetry run black --check .
 
-
   test:
     name: Test
     runs-on: macos-latest
@@ -76,6 +75,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install poetry
           poetry install --no-root
+
         
       - name: Run tests in container
         run: |
