@@ -24,7 +24,7 @@ jobs:
     #       python -m pip install poetry
     #       poetry install --no-root
 
-    name: Build Docker Image
+    name: Docker Image Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
