@@ -34,85 +34,39 @@ jobs:
           echo "JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}" >> .env
 
       - name: Build Docker image
-        run: docker build -t your-image-name .
+        run: docker build -t user-management-service .
 
       - name: Log in to Docker Hub
         run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Tag Docker image
-        run: docker tag your-image-name ${{ secrets.DOCKERHUB_USERNAME }}/your-image-name:latest
+        run: docker tag user-management-service ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
       - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/your-image-name:latest
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
   lint:
-    name: Lint
+    name: Lint Docker Image
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Pull Docker image from Docker Hub
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.10.12
+      - name: Run isort linter
+        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest isort --check .
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --no-root
+      - name: Run black linter
+        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest black --check .
 
-      - name: Check imports with isort
-        run: poetry run isort --check .
-        
-      - name: Check formatting with black
-        run: poetry run black --check .
 
   test:
-    name: Test
+    name: Test Docker Image
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Pull Docker image from Docker Hub
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.10.12
-
-      - name: Install Docker Compose
-        run: |
-          curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          chmod +x /usr/local/bin/docker-compose
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --no-root
-
-      - name: Set environment variables
-        run: |
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
-          echo "JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}" >> .env
-
-      - name: Run tests in container
-        run: |
-          docker-compose run --build --rm api pytest .
-          
-      - name: Stop containers
-        run: |
-          docker-compose down
-
-
-
-
-
-
-      
+      - name: Run tests with pytest
+        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest poetry run pytest
