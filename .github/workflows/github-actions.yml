@@ -32,6 +32,9 @@ jobs:
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
           echo "JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}" >> .env
+          echo "AWS_ACCESS_KEY_STRING=${{ secrets.AWS_ACCESS_KEY_STRING }}" >> .env
+          echo "AWS_SECRET_KEY_STRING=${{ secrets.AWS_SECRET_KEY_STRING }}" >> .env
+          echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
 
       - name: Build Docker image
         run: docker build -t user-management-service .
