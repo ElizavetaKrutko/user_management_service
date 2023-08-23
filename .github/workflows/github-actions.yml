@@ -96,3 +96,4 @@ jobs:
         run: docker run --network=app1_net -e DB_HOST=postgres -e REDIS_HOST=redis ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest poetry run pytest .
 
 
+

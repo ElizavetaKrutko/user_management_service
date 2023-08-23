@@ -18,6 +18,7 @@ services:
       app1_net:
         ipv4_address: 192.168.0.4
 
+
   postgres:
     image: postgres:14
     restart: always
@@ -32,6 +33,7 @@ services:
     networks:
       app1_net:
         ipv4_address: 192.168.0.2
+
     # env_file:
     #   - .env
 
@@ -45,6 +47,7 @@ services:
       app1_net:
         ipv4_address: 192.168.0.3
 
+
 volumes:
     postgres-data:
     redis-data:
@@ -56,3 +59,4 @@ networks:
       config:
       - subnet: "192.168.0.0/24"  #ipv4
         gateway: 192.168.0.1
+
