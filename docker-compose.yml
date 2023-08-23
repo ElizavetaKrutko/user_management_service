@@ -15,7 +15,8 @@ services:
       - postgres
       - redis
     networks:
-      - my-network
+      app1_net:
+        ipv4_address: 192.168.0.4
 
   postgres:
     image: postgres:14
@@ -29,7 +30,8 @@ services:
     ports:
       - 5432:5432
     networks:
-      - my-network
+      app1_net:
+        ipv4_address: 192.168.0.2
     # env_file:
     #   - .env
 
@@ -40,12 +42,17 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - my-network
+      app1_net:
+        ipv4_address: 192.168.0.3
 
 volumes:
     postgres-data:
     redis-data:
 
 networks:
-  my-network:
-    driver: bridge
+  app1_net:
+    ipam:
+      driver: default 
+      config:
+      - subnet: "192.168.0.0/24"  #ipv4
+        gateway: 192.168.0.1
