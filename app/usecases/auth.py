@@ -145,6 +145,7 @@ class AuthManagementUseCase:
                 await self.db_repo.update_user_by_id(
                     User(hashed_password=hashed_password), token_data.sub
                 )
+                return "Password is successfully changed"
             else:
                 raise self.app_exceptions.invalid_token_error(message="Token invalid")
         else:

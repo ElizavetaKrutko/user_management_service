@@ -22,7 +22,7 @@
 
 .DS_Store
 
-envs/.env
+.env
 
 app/adapters/__pycache__/
 app/__pycache__/

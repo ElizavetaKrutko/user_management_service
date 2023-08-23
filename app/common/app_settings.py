@@ -2,10 +2,13 @@ import logging
 from enum import Enum
 from typing import Any
 
+from dotenv import load_dotenv
 from pydantic import BaseSettings, Field, SecretStr
 from sqlalchemy import URL
 
 from app.common.custom_logging import CustomFormatter
+
+load_dotenv()
 
 
 class EnvironmentTypes(Enum):
@@ -28,12 +31,18 @@ class BaseAppSettings(BaseSettings):
     jwt_reset_password_secret_key: str = Field(
         "abracadabraLALA", env="JWT_RESET_PASSWORD_SECRET_KEY"
     )
+    aws_access_key_string: str
+    aws_secret_key_string: str
+    region_name: str
     db_driver_name: str = "postgresql+asyncpg"
     db_username: str = Field("postgres", env="DB_USERNAME")
     db_host: str = Field("postgres", env="DB_HOST")
     db_password: SecretStr = Field("root", env="DB_PASSWORD")
     db_database: str = Field("postgres", env="DB_NAME")
     db_port: int | None
+
+    class Config:
+        env_file = ".env"
 
     @property
     def get_db_creds(self):
