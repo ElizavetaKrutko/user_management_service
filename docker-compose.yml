@@ -7,6 +7,8 @@ services:
       - "8000:8000"
     volumes:
       - ./app:/user_management_service/app
+    env_file:
+      - .env
     environment:
       - API_ENVIRONMENT=local
     depends_on:
@@ -25,7 +27,7 @@ services:
     ports:
       - 5432:5432
     env_file:
-      - envs/.env
+      - .env
 
   redis:
     image: redis:latest
