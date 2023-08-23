@@ -91,5 +91,11 @@ jobs:
       - name: Pull Docker image from Docker Hub
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
-      - name: Run tests with pytest
-        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest poetry run pytest .
+      # Run tests with pytest using the pulled Docker image
+      - name: Run tests with pytest using existing PostgreSQL and Redis containers
+        run: |
+          docker run \
+            -e DB_HOST=postgres \  # Use the hostname or IP address of the running PostgreSQL container
+            -e REDIS_HOST=redis \  # Use the hostname or IP address of the running Redis container
+            ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest \
+            poetry run pytest .
