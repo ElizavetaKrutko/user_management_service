@@ -70,6 +70,15 @@ jobs:
     needs: build 
 
     steps:
+      - uses: actions/checkout@v3
+      - uses: isbang/compose-action@v1.5.1
+        with:
+          compose-file: "./docker-compose.yml"
+          down-flags: "--volumes"
+          services: |
+            postgres
+            redis
+        
       - name: Pull Docker image from Docker Hub
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
