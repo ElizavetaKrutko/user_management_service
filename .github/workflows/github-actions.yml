@@ -93,5 +93,6 @@ jobs:
 
       # Run tests with pytest using the pulled Docker image
       - name: Run tests with pytest using existing PostgreSQL and Redis containers
-        run: docker run --network=my_network -e DB_HOST=postgres -e REDIS_HOST=redis ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest poetry run pytest .
+        run: docker run --network=my-network -e DB_HOST=postgres -e REDIS_HOST=redis ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest poetry run pytest .
+
 
