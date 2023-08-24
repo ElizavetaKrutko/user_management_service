@@ -165,4 +165,5 @@ jobs:
           echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
   
       - name: Run tests
-        run: poetry run pytest .
+        run: |
+          docker exec -it api poetry run pytest .
