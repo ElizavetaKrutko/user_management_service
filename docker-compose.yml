@@ -1,8 +1,8 @@
 version: "3.8"
 services:
   api:
-    build: .
-    restart: always
+    # build: .
+    # restart: always
     image: user-management-service:latest
     ports:
       - "8000:8000"
