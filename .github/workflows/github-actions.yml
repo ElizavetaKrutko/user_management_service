@@ -139,7 +139,7 @@ jobs:
         ports:
           - 6379:6379
       api:
-        image: ghcr.io/elizavetakrutko/user-management-service:latest
+        image: ghcr.io/${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
         options: --user root
         credentials:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
