@@ -122,7 +122,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:14
         env:
           POSTGRES_USER: ${{ secrets.DB_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -169,6 +169,6 @@ jobs:
           echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
   
       - name: Run tests
-        # run: poetry run pytest tests
-        run: docker run api pytest tests
+        run: |
+          docker exec -it user_management_service_api_1 poetry run pytest .
         
