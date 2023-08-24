@@ -16,6 +16,7 @@ services:
       - postgres
       - redis
 
+
   postgres:
     image: postgres:14
     restart: always
@@ -30,6 +31,7 @@ services:
     env_file:
       - .env
 
+
   redis:
     image: redis:latest
     ports:
@@ -41,3 +43,4 @@ services:
 volumes:
     postgres-data:
     redis-data:
+
