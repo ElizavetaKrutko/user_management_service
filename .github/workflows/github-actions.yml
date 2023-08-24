@@ -144,7 +144,7 @@ jobs:
       #   credentials:
       #     username: ${{ secrets.DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-      api:
+    container:
         image: ${{ github.API_IMAGE }}
       
 
@@ -169,6 +169,5 @@ jobs:
           echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
   
       - name: Run tests
-        run: |
-          docker exec -it user_management_service_api_1 poetry run pytest .
+        run: poetry run pytest .
         
