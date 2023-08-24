@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - dev
-env:
-  REGISTRY: ghcr.io
-  
+
 jobs:
   # build:
   #   name: Build and Push
@@ -145,7 +143,7 @@ jobs:
       #     username: ${{ secrets.DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.DOCKERHUB_TOKEN }}
     container:
-        image: ${{ github.API_IMAGE }}
+      image: ${{ github.API_IMAGE }}
       
 
       
