@@ -138,14 +138,14 @@ jobs:
         image: redis:latest
         ports:
           - 6379:6379
-      api:
-        image: ghcr.io/elizavetakrutko/user-management-service:latest
-        options: --user root
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
       # api:
-      #   image: ${{ github.API_IMAGE }}
+      #   image: ghcr.io/elizavetakrutko/user-management-service:latest
+      #   options: --user root
+      #   credentials:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+      api:
+        image: ${{ github.API_IMAGE }}
       
 
       
@@ -169,4 +169,6 @@ jobs:
           echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
   
       - name: Run tests
-        run: poetry run pytest tests
+        # run: poetry run pytest tests
+        run: docker run api pytest tests
+        
