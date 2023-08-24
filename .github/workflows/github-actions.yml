@@ -81,9 +81,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y docker-compose
           
-      - name: Pull Docker image from Docker Hub
-        id: pull_image
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+      # - name: Pull Docker image from Docker Hub
+      #   id: pull_image
+      #   run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
         
       # - uses: isbang/compose-action@v1.5.1
       #   with:
