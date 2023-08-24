@@ -75,6 +75,17 @@ jobs:
       # Create an empty .env file
       - name: Create an empty .env file
         run: touch .env
+
+      - name: Set environment variables
+        run: |
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+          echo "JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}" >> .env
+          echo "AWS_ACCESS_KEY_STRING=${{ secrets.AWS_ACCESS_KEY_STRING }}" >> .env
+          echo "AWS_SECRET_KEY_STRING=${{ secrets.AWS_SECRET_KEY_STRING }}" >> .env
+          echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
       
       # - name: Install Docker Compose
       #   run: |
