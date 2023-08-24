@@ -166,4 +166,4 @@ jobs:
   
       - name: Run tests
         run: |
-          docker exec -it api poetry run pytest .
+          docker exec api poetry run pytest .
