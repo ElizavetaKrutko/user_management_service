@@ -4,70 +4,71 @@ on:
   push:
     branches:
       - dev
+      - feature/github-actions
 
 jobs:
-  build:
-    name: Build and Push
-    runs-on: ubuntu-latest
+  # build:
+  #   name: Build and Push
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.10.12
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: 3.10.12
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install poetry
-          poetry install --no-root
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install poetry
+  #         poetry install --no-root
 
-      - name: Set environment variables
-        run: |
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
-          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
-          echo "JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}" >> .env
-          echo "AWS_ACCESS_KEY_STRING=${{ secrets.AWS_ACCESS_KEY_STRING }}" >> .env
-          echo "AWS_SECRET_KEY_STRING=${{ secrets.AWS_SECRET_KEY_STRING }}" >> .env
-          echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
+  #     - name: Set environment variables
+  #       run: |
+  #         echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+  #         echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+  #         echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+  #         echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> .env
+  #         echo "JWT_REFRESH_SECRET_KEY=${{ secrets.JWT_REFRESH_SECRET_KEY }}" >> .env
+  #         echo "AWS_ACCESS_KEY_STRING=${{ secrets.AWS_ACCESS_KEY_STRING }}" >> .env
+  #         echo "AWS_SECRET_KEY_STRING=${{ secrets.AWS_SECRET_KEY_STRING }}" >> .env
+  #         echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
 
-      - name: Build Docker image
-        run: docker build -t user-management-service .
+  #     - name: Build Docker image
+  #       run: docker build -t user-management-service .
 
-      - name: Log in to Docker Hub
-        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+  #     - name: Log in to Docker Hub
+  #       run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag Docker image
-        run: docker tag user-management-service ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+  #     - name: Tag Docker image
+  #       run: docker tag user-management-service ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
-      - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+  #     - name: Push Docker image to Docker Hub
+  #       run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
-  lint:
-    name: Lint Docker Image
-    runs-on: ubuntu-latest
-    needs: build 
+  # lint:
+  #   name: Lint Docker Image
+  #   runs-on: ubuntu-latest
+  #   needs: build 
 
-    steps:
-      - name: Pull Docker image from Docker Hub
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+  #   steps:
+  #     - name: Pull Docker image from Docker Hub
+  #       run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
 
-      - name: Run isort linter
-        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest isort --check .
+  #     - name: Run isort linter
+  #       run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest isort --check .
 
-      - name: Run black linter
-        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest black --check .
+  #     - name: Run black linter
+  #       run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest black --check .
 
 
   test:
     name: Test Docker Image
     runs-on: ubuntu-latest
-    needs: build 
+    # needs: build 
 
     steps:
       - uses: actions/checkout@v3
@@ -75,28 +76,22 @@ jobs:
       # Create an empty .env file
       - name: Create an empty .env file
         run: touch .env
+
+      - name: Pull Docker image from Docker Hub
+        id: pull_image
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
         
       - uses: isbang/compose-action@v1.5.1
         with:
           compose-file: "./docker-compose.yml"
           down-flags: "--volumes"
-          services: |
-            postgres
-            redis
-        env:
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-        
-      - name: Pull Docker image from Docker Hub
-        id: pull_image
-        run: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
-            echo "::set-env name=API_IMAGE::${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest"
 
+      - name: Down containers
+      - run: docker-compose down
+      
       # Run tests with pytest using the pulled Docker image
-      - name: Run tests with pytest using existing PostgreSQL and Redis containers
-        run: docker-compose run --build api=API_IMAGE poetry pytest .
+      - name: Run tests
+        run: docker-compose run --build api pytest .
 
 
 
