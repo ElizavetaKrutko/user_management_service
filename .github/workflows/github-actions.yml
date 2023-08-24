@@ -91,12 +91,12 @@ jobs:
       - name: Pull Docker image from Docker Hub
         id: pull_image
         run: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
-            echo "::set-env name=API_IMAGE::${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest"
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+          echo "API_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest" >> $GITHUB_ENV
 
       # Run tests with pytest using the pulled Docker image
       - name: Run tests with pytest using existing PostgreSQL and Redis containers
-        run: docker-compose run --build api=API_IMAGE poetry pytest .
+        run: docker-compose run --build api=${{ env.API_IMAGE }} poetry pytest .
 
 
 
