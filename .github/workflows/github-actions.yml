@@ -88,12 +88,11 @@ jobs:
       - uses: isbang/compose-action@v1.5.1
         with:
           compose-file: "./docker-compose.yml"
-          compose-flags: "--build api pytest ."
           down-flags: "--volumes"
 
       # - name: Down containers
       #   run: docker-compose down
       
-      # Run tests with pytest using the pulled Docker image
-      # - name: Run tests
-      #   run: docker-compose run --build api pytest .
+      # Run tests with pytest
+      - name: Run tests
+        run: docker-compose run api poetry run pytest .
