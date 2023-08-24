@@ -89,11 +89,13 @@ jobs:
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
         
       - name: Pull Docker image from Docker Hub
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+        id: pull_image
+        run: |
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+            echo "::set-env name=API_IMAGE::${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest"
 
       # Run tests with pytest using the pulled Docker image
       - name: Run tests with pytest using existing PostgreSQL and Redis containers
-        run: docker run --network=app1_net -e DB_HOST=postgres -e REDIS_HOST=redis ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest poetry run pytest .
-
+        run: docker-compose run --build api=API_IMAGE poetry pytest .
 
 
