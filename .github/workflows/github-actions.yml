@@ -3,8 +3,7 @@ name: Python CI
 on:
   push:
     branches:
-      # - dev
-      - feature/github-actions
+      - dev
 
 jobs:
   # build:
