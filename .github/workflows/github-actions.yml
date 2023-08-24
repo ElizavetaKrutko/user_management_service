@@ -75,18 +75,23 @@ jobs:
       # Create an empty .env file
       - name: Create an empty .env file
         run: touch .env
-
+      
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+          
       - name: Pull Docker image from Docker Hub
         id: pull_image
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
         
-      - uses: isbang/compose-action@v1.5.1
-        with:
-          compose-file: "./docker-compose.yml"
-          down-flags: "--volumes"
+      # - uses: isbang/compose-action@v1.5.1
+      #   with:
+      #     compose-file: "./docker-compose.yml"
+      #     down-flags: "--volumes"
 
-      - name: Down containers
-        run: docker-compose down
+      # - name: Down containers
+      #   run: docker-compose down
       
       # Run tests with pytest using the pulled Docker image
       - name: Run tests
