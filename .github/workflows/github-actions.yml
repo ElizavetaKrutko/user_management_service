@@ -86,7 +86,7 @@ jobs:
           down-flags: "--volumes"
 
       - name: Down containers
-      - run: docker-compose down
+        run: docker-compose down
       
       # Run tests with pytest using the pulled Docker image
       - name: Run tests
