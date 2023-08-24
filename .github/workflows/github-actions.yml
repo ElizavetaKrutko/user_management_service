@@ -140,7 +140,7 @@ jobs:
           - 6379:6379
       api:
         image: elizavetakrutko/user-management-service:latest
-        options: --user root
+        options: --user root --name api --hostname api
         credentials:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
