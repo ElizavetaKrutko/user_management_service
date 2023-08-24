@@ -86,7 +86,10 @@ jobs:
           echo "AWS_ACCESS_KEY_STRING=${{ secrets.AWS_ACCESS_KEY_STRING }}" >> .env
           echo "AWS_SECRET_KEY_STRING=${{ secrets.AWS_SECRET_KEY_STRING }}" >> .env
           echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
-      
+
+      - name: Pull Docker image from Docker Hub
+        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+        
       - uses: isbang/compose-action@v1.5.1
         with:
           compose-file: "./docker-compose.yml"
