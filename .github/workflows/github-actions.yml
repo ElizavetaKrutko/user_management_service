@@ -107,4 +107,4 @@ jobs:
       # Run tests with pytest
       - name: Run tests
         # run: docker-compose run api poetry run pytest .
-        run: pytest . 
+        run: docker run api poetry run pytest . 
