@@ -5,7 +5,9 @@ import pytest
 from app.common.config import app_exceptions
 from app.common.exceptions.base_exceptions import BaseAppExceptions
 from app.common.exceptions.fast_api_sql_alchemy_exceptions import (
-    NoDataError, NoPermissionsError)
+    NoDataError,
+    NoPermissionsError,
+)
 from app.domain.user import Role, User
 from app.usecases.user import UserUseCase
 from tests.unit_test.mocks.inmemory_postgres_repo import InMemoryUserRepository

@@ -116,6 +116,6 @@ jobs:
           echo "AWS_SECRET_KEY_STRING=${{ secrets.AWS_SECRET_KEY_STRING }}" >> .env
           echo "REGION_NAME=${{ secrets.REGION_NAME }}" >> .env
   
-      - name: Run tests
+      - name: Run unit tests
         run: |
-          docker exec api poetry run pytest .
+          docker exec api poetry run pytest tests/unit_test

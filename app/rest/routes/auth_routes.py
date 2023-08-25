@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, status
 
-from app.dependencies.security import (get_user_from_access_token,
-                                       get_user_from_refresh_token)
+from app.dependencies.security import (
+    get_user_from_access_token,
+    get_user_from_refresh_token,
+)
 from app.dependencies.usecase_dependencies import get_auth_management_use_case
 from app.rest.routes import schemas
 from app.usecases.auth import AuthManagementUseCase

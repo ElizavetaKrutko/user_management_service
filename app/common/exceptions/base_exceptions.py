@@ -37,15 +37,21 @@ class BaseAppExceptions(ABC):
         pass
 
     @abstractmethod
-    def bad_request_error(self, message: str, headers: dict = None) -> BaseBadRequestError:
+    def bad_request_error(
+        self, message: str, headers: dict = None
+    ) -> BaseBadRequestError:
         pass
 
     @abstractmethod
-    def invalid_token_error(self, message: str, headers: dict = None) -> BaseInvalidTokenError:
+    def invalid_token_error(
+        self, message: str, headers: dict = None
+    ) -> BaseInvalidTokenError:
         pass
 
     @abstractmethod
-    def no_permissions_error(self, message: str, headers: dict = None) -> BaseNoPermissionsError:
+    def no_permissions_error(
+        self, message: str, headers: dict = None
+    ) -> BaseNoPermissionsError:
         pass
 
     @abstractmethod

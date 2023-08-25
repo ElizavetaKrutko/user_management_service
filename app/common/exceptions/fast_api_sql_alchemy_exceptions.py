@@ -1,8 +1,15 @@
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
-from app.common.exceptions.base_exceptions import BaseDBError, BaseORMError, BaseBadRequestError, BaseInvalidTokenError, \
-    BaseNoPermissionsError, BaseNoDataError, BaseAppExceptions
+from app.common.exceptions.base_exceptions import (
+    BaseAppExceptions,
+    BaseBadRequestError,
+    BaseDBError,
+    BaseInvalidTokenError,
+    BaseNoDataError,
+    BaseNoPermissionsError,
+    BaseORMError,
+)
 
 
 class DBError(BaseDBError):
@@ -10,7 +17,6 @@ class DBError(BaseDBError):
 
 
 class ORMError(BaseORMError):
-
     def __init__(self, error: IntegrityError):
         self.error = error
 
@@ -18,7 +24,9 @@ class ORMError(BaseORMError):
         return str(self.error.orig).split(":")[-1].replace("\n", "").strip()
 
     def bad_request_error(self) -> HTTPException:
-        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=self.__convert__())
+        return HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=self.__convert__()
+        )
 
 
 class BadRequestError(BaseBadRequestError, HTTPException):
@@ -50,7 +58,6 @@ class NoDataError(BaseNoDataError, HTTPException):
 
 
 class AppExceptions(BaseAppExceptions):
-
     def db_error(self, message) -> DBError:
         return DBError(message)
 
@@ -60,10 +67,14 @@ class AppExceptions(BaseAppExceptions):
     def bad_request_error(self, message: str, headers: dict = None) -> BadRequestError:
         return BadRequestError(message, headers)
 
-    def invalid_token_error(self, message: str, headers: dict = None) -> InvalidTokenError:
+    def invalid_token_error(
+        self, message: str, headers: dict = None
+    ) -> InvalidTokenError:
         return InvalidTokenError(message, headers)
 
-    def no_permissions_error(self, message: str, headers: dict = None) -> NoPermissionsError:
+    def no_permissions_error(
+        self, message: str, headers: dict = None
+    ) -> NoPermissionsError:
         return NoPermissionsError(message, headers)
 
     def no_data_error(self, message: str, headers: dict = None) -> NoDataError:

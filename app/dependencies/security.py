@@ -6,8 +6,7 @@ from jose import jwt
 from pydantic import ValidationError
 
 from app.adapters.repositories.redis_repo import RedisRepository
-from app.adapters.repositories.user.postgres_repo import \
-    SQLAlchemyUserRepository
+from app.adapters.repositories.user.postgres_repo import SQLAlchemyUserRepository
 from app.common.config import app_exceptions, logger, settings
 from app.dependencies.database import get_db
 from app.domain.user import User

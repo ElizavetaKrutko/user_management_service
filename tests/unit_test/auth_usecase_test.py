@@ -6,7 +6,9 @@ from jose import jwt
 
 from app.common.config import app_exceptions, settings
 from app.common.exceptions.fast_api_sql_alchemy_exceptions import (
-    AppExceptions, BadRequestError)
+    AppExceptions,
+    BadRequestError,
+)
 from app.domain.user import Role, User
 from app.usecases.auth import AuthManagementUseCase
 from tests.unit_test.mocks.inmemory_postgres_repo import InMemoryUserRepository
