@@ -18,9 +18,6 @@ class RedisRepository(NoSqlDBRepositoryPort):
         logger.debug("jwt_uuid: ")
         logger.debug(jwt_uuid)
 
-        logger.debug("user_id: ")
-        logger.debug(user_id)
-
         user_active_jwt_key = str(user_id) + ":active_jwt"
         user_blacklist_key = str(user_id) + ":blacklist"
 
