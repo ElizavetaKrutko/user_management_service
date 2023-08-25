@@ -53,15 +53,35 @@ jobs:
     runs-on: ubuntu-latest
     needs: build 
 
+    services:
+      api:
+        image: elizavetakrutko/user-management-service:latest
+        options: --user root --name api --hostname api
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+              
     steps:
-      - name: Pull Docker image from Docker Hub
-        run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Run isort linter
-        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest isort --check .
+        run: |
+          docker exec api isort --check .
 
-      - name: Run black linter
-        run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest black --check .
+      - name: Run isort linter
+        run: |
+          docker exec api black --check .
+
+    # steps:
+      # - name: Pull Docker image from Docker Hub
+      #   run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest
+
+      # - name: Run isort linter
+      #   run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest isort --check .
+
+      # - name: Run black linter
+      #   run: docker run ${{ secrets.DOCKERHUB_USERNAME }}/user-management-service:latest black --check .
 
   
   test:
