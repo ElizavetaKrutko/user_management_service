@@ -31,15 +31,20 @@ class AuthManagementUseCase:
         self.cloud_repo = cloud_repo
         self.app_exceptions = app_exceptions
 
-    async def create_jwt_token(self, subject: Union[str, Any]):
+    async def create_jwt_token(
+        self, subject: Union[str, Any], role: str, group_id: int
+    ):
         jwt_uuid = uuid.uuid4()
         await self.no_sql_db_repo.activate_jwt(subject, jwt_uuid)
         return {
-            "access_token": self.create_access_token(subject, jwt_uuid),
+            "access_token": self.create_access_token(subject, role, group_id, jwt_uuid),
             "refresh_token": self.create_refresh_token(subject, jwt_uuid),
         }
 
-    def create_access_token(self, subject: Union[str, Any], jwt_uuid: uuid.UUID) -> str:
+    def create_access_token(
+        self, subject: Union[str, Any], role: str, group_id: int, jwt_uuid: uuid.UUID
+    ) -> str:
+        logger.debug(role)
         expires_delta = datetime.utcnow() + timedelta(
             minutes=ACCESS_TOKEN_EXPIRE_MINUTES
         )
@@ -47,6 +52,8 @@ class AuthManagementUseCase:
         to_encode = {
             "exp": expires_delta,
             "sub": str(subject),
+            "role": str(role.value),
+            "group_id": group_id,
             "jwt_uuid": str(jwt_uuid),
         }
         logger.debug(settings.jwt_access_secret_key)
@@ -90,7 +97,9 @@ class AuthManagementUseCase:
         else:
             created_user = await self.db_repo.create_user(new_user_data)
 
-            return await self.create_jwt_token(created_user.id)
+            return await self.create_jwt_token(
+                created_user.id, created_user.role, created_user.group_id
+            )
 
     async def login_user(self, new_user_data: User):
         current_user = await self.db_repo.get_user_by_login(new_user_data.login)
@@ -105,7 +114,9 @@ class AuthManagementUseCase:
         if current_user.is_blocked:
             raise self.app_exceptions.bad_request_error(message="User is blocked")
 
-        return await self.create_jwt_token(current_user.id)
+        return await self.create_jwt_token(
+            current_user.id, current_user.role, current_user.group_id
+        )
 
     async def logout_user(self, subject: uuid.UUID):
         await self.no_sql_db_repo.blacklist_jwt(subject)
